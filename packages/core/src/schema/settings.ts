@@ -1,14 +1,17 @@
 import { z } from 'zod'
 import { IsoDate } from './common'
 
+// Haiku 5.5 is the intended default, but as of 2026-10-16 Bedrock answers it (and every 5.x model) with
+// 403 "not available for this account" — switch once AWS grants the account access.
 export const DEFAULT_MODEL = 'global.anthropic.claude-haiku-4-5-20251001-v1:0'
 
 export const KNOWN_MODELS: { id: string; label: string }[] = [
   { id: DEFAULT_MODEL, label: 'Claude Haiku 4.5 (fast, cheapest)' },
+  { id: 'global.anthropic.claude-haiku-5-5', label: 'Claude Haiku 5.5' },
   { id: 'global.anthropic.claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
+  { id: 'global.anthropic.claude-sonnet-5-5', label: 'Claude Sonnet 5.5' },
   { id: 'global.anthropic.claude-opus-4-6-v1', label: 'Claude Opus 4.6' },
-  { id: 'anthropic.claude-sonnet-5', label: 'Claude Sonnet 5' },
-  { id: 'anthropic.claude-opus-5', label: 'Claude Opus 5' },
+  { id: 'anthropic.claude-opus-5-5', label: 'Claude Opus 5.5' },
 ]
 
 export const TelegramSettingsSchema = z.object({
