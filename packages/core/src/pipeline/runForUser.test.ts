@@ -34,7 +34,7 @@ function makeDeps(opts: { settings?: ReturnType<typeof settings> | null; jobs?: 
   }
   const secrets = { getUserSecret: vi.fn().mockImplementation(async (_u: string, name: string) => (name === 'telegram/bot-token' ? 'bot' : 'fl-token')) }
   const fetchRecent = vi.fn().mockImplementation(async () => { calls.push('fetch'); if (opts.fetchError) throw opts.fetchError; return opts.jobs ?? [] })
-  const sources = { freelancer: { platform: 'freelancer', fetchRecent, verifyToken: vi.fn() }, upwork: { platform: 'upwork', fetchRecent: vi.fn().mockResolvedValue([]), verifyToken: vi.fn() } }
+  const sources = { freelancer: { platform: 'freelancer', fetchRecent, verifyToken: vi.fn() }, upwork: { platform: 'upwork', fetchRecent: vi.fn().mockResolvedValue([]), verifyToken: vi.fn() }, freelancehunt: { platform: 'freelancehunt', fetchRecent, verifyToken: vi.fn() } }
   const parse = vi.fn().mockImplementation(async () => {
     if (opts.scoreFails) throw new Error('bedrock throttled')
     return { parsed_output: { score: opts.score ?? 85, reasoning: 'fits', estimatedHours: 2, risks: [] }, usage: { input_tokens: 100, output_tokens: 20, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 }, stop_reason: 'end_turn' }
@@ -99,6 +99,18 @@ describe('runForUser', () => {
     expect(calls).toEqual(['fetch'])
     expect(run.errors[0]).toMatch(/^score:freelancer:a:/)
     expect(run.perPlatform.freelancer!.scored).toBe(0)
+  })
+
+  it('polls freelancehunt with its skill ids and no token', async () => {
+    const s = settings()
+    s.platforms.freelancer = { enabled: false, query: '', tokenSet: false }
+    s.platforms.freelancehunt = { enabled: true, skillIds: [28, 99] }
+    const { deps, fetchRecent } = makeDeps({ settings: s, jobs: [job('fh1', { platform: 'freelancehunt' })] })
+    const run = await runForUser(deps, 'u1', 'schedule')
+    expect(fetchRecent).toHaveBeenCalledWith(expect.objectContaining({ query: '28,99', token: '' }))
+    expect(deps.secrets.getUserSecret).not.toHaveBeenCalledWith('u1', 'freelancer/token')
+    expect(run.perPlatform.freelancehunt).toMatchObject({ fetched: 1, scored: 1, notified: 1 })
+    expect(run.perPlatform.freelancehunt!.error).toBeUndefined()
   })
 
   it('records adapter errors per platform and still finishes the run', async () => {

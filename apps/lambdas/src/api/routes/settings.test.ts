@@ -28,6 +28,16 @@ describe('/settings', () => {
     expect(saved.updatedAt).toBe(nowIso)
     expect((await createApp(deps).request('/settings', json({ telegram: { webhookSecret: 'x' } }, 'PATCH'), authed())).status).toBe(400)
   })
+  it('PATCH saves freelancehunt enabled/skillIds and leaves freelancer untouched', async () => {
+    const stored = defaultSettings(nowIso)
+    stored.platforms.freelancer = { enabled: true, query: 'react', tokenSet: true }
+    const deps = makeApiDeps({ store: { getSettings: vi.fn().mockResolvedValue(stored) } })
+    const res = await createApp(deps).request('/settings', json({ platforms: { freelancehunt: { enabled: true, skillIds: [28] } } }, 'PATCH'), authed('s'))
+    expect(res.status).toBe(200)
+    const saved = (deps.store.putSettings as ReturnType<typeof vi.fn>).mock.calls[0]![1]
+    expect(saved.platforms.freelancehunt).toEqual({ enabled: true, skillIds: [28] })
+    expect(saved.platforms.freelancer).toEqual({ enabled: true, query: 'react', tokenSet: true })
+  })
 })
 
 describe('/settings/telegram/token', () => {

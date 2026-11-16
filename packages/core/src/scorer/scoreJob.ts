@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import type { LlmClient } from '../llm/index'
-import { usageFrom } from '../llm/index'
+import { supportsAdaptiveThinking, usageFrom } from '../llm/index'
 import { renderJob } from '../prompts/index'
 import { ScoreResultSchema, type Job, type ScoreResult, type Usage, type Verdict } from '../schema/index'
 
@@ -35,10 +35,15 @@ export async function scoreJob(args: {
 }): Promise<{ result: ScoreResult; verdict: Verdict; usage: Usage }> {
   const response = await args.client.messages.parse<ScoreOutput>({
     model: args.model,
-    max_tokens: 1024,
+    // Headroom for thinking: 4.6+ models think by default and thinking counts toward max_tokens.
+    max_tokens: 4096,
     system: [{ type: 'text', text: args.systemPrompt, cache_control: { type: 'ephemeral' } }],
     messages: [{ role: 'user', content: renderJob(args.job) }],
-    output_config: { format: zodOutputFormat(ScoreOutputSchema) },
+    output_config: {
+      format: zodOutputFormat(ScoreOutputSchema),
+      // Scoring is a classification task; low effort keeps thinking short. Haiku 4.5 rejects the effort field.
+      ...(supportsAdaptiveThinking(args.model) && { effort: 'low' }),
+    },
   })
   const raw = response.parsed_output
   if (!raw) throw new ScoringError(`model returned no parseable output (stop_reason=${response.stop_reason})`)

@@ -28,6 +28,13 @@ describe('scoreJob', () => {
     expect(out.verdict).toBe('strong')
     expect(out.usage).toEqual({ inputTokens: 1700, outputTokens: 80 })
   })
+  it('sets low effort only on models that accept it', async () => {
+    const { client, parse } = fakeClient({ score: 60, reasoning: 'x', estimatedHours: 1, risks: [] })
+    await scoreJob({ client, model: 'global.anthropic.claude-haiku-5-5', systemPrompt: 'S', job: SAMPLE_JOB })
+    await scoreJob({ client, model: 'global.anthropic.claude-haiku-4-5-20251001-v1:0', systemPrompt: 'S', job: SAMPLE_JOB })
+    expect(parse.mock.calls[0]![0]).toHaveProperty('output_config.effort', 'low')
+    expect(parse.mock.calls[1]![0]).not.toHaveProperty('output_config.effort')
+  })
   it('clamps score into 0..100', async () => {
     const { client } = fakeClient({ score: 140, reasoning: 'x', estimatedHours: -2, risks: [] })
     const out = await scoreJob({ client, model: 'm', systemPrompt: 'S', job: SAMPLE_JOB })

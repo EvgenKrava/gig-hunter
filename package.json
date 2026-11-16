@@ -14,6 +14,7 @@
     "poller:local": "tsx scripts/poller-local.ts",
     "seed:user": "tsx scripts/seed-user.ts",
     "freelancer:probe": "tsx scripts/freelancer-probe.ts",
+    "freelancehunt:probe": "tsx scripts/freelancehunt-probe.ts",
     "deploy:web": "scripts/deploy-web.sh"
   },
   "devDependencies": {

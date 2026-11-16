@@ -31,6 +31,7 @@ export function settingsRoutes(deps: ApiDeps) {
     if (patch.model !== undefined) s.model = patch.model
     if (patch.chatModel !== undefined) s.chatModel = patch.chatModel
     if (patch.platforms?.freelancer) s.platforms.freelancer = { ...s.platforms.freelancer, ...patch.platforms.freelancer }
+    if (patch.platforms?.freelancehunt) s.platforms.freelancehunt = { ...s.platforms.freelancehunt, ...patch.platforms.freelancehunt }
     if (patch.telegram?.chatId !== undefined) s.telegram = { ...s.telegram, chatId: patch.telegram.chatId, chatTitle: 'set manually' }
     s.updatedAt = deps.now().toISOString()
     await deps.store.putSettings(sub, s)

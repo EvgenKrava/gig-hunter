@@ -19,7 +19,8 @@ export interface LlmClient {
 }
 
 // Models served by the Messages-API Bedrock endpoint (Mantle). Everything else is the legacy InvokeModel stack.
-const MANTLE_PATTERNS = [/claude-opus-4-7/, /claude-opus-4-8/, /claude-opus-5/, /claude-sonnet-5/, /claude-fable/, /claude-mythos/]
+// Sonnet 5.5 and Haiku 5.5 are InvokeModel-only in us-east-1 (Mantle answers 404), hence the `(?!-5)`.
+const MANTLE_PATTERNS = [/claude-opus-4-7/, /claude-opus-4-8/, /claude-opus-5/, /claude-sonnet-5(?!-5)/, /claude-fable/, /claude-mythos/]
 
 export function usesMantle(modelId: string): boolean {
   return MANTLE_PATTERNS.some((re) => re.test(modelId))
@@ -27,17 +28,30 @@ export function usesMantle(modelId: string): boolean {
 
 /** Adaptive thinking exists from the 4.6 generation on; Haiku 4.5 / Sonnet 4.5 / Opus 4.5 do not take it. */
 export function supportsAdaptiveThinking(modelId: string): boolean {
-  return usesMantle(modelId) || /claude-(opus|sonnet)-4-6/.test(modelId)
+  return usesMantle(modelId) || /claude-(opus|sonnet)-4-6|claude-(sonnet|haiku)-5-5/.test(modelId)
 }
 
 export function createBedrockClient(modelId: string, region = process.env.AWS_REGION ?? 'us-east-1'): LlmClient {
-  // A null apiKey forces SigV4 (IAM) auth even when AWS_BEARER_TOKEN_BEDROCK / ANTHROPIC_AUTH_TOKEN are set in the
-  // environment (developer shells often have them); GigHunter authenticates with the Lambda role, never a bearer token.
-  // The SDK's ClientOptions type only admits `string | undefined`, but `undefined` re-enables the env lookup, so the
-  // runtime-honoured `null` is passed through a cast.
-  const noBearer = { awsRegion: region, apiKey: null as unknown as string }
-  const client = usesMantle(modelId) ? new AnthropicBedrockMantle(noBearer) : new AnthropicBedrock(noBearer)
+  // GigHunter authenticates with the Lambda role (SigV4), never a bearer token, even when AWS_BEARER_TOKEN_BEDROCK /
+  // ANTHROPIC_AUTH_TOKEN are set in the environment (developer shells often have them). The two clients need different
+  // tricks to skip the env lookup:
+  // - Legacy: a null apiKey does it. The SDK's ClientOptions type only admits `string | undefined`, but `undefined`
+  //   re-enables the env lookup, so the runtime-honoured `null` is passed through a cast.
+  // - Mantle: treats null as unset and reads AWS_BEARER_TOKEN_BEDROCK in its constructor, so the var is hidden for that call.
+  const client = usesMantle(modelId)
+    ? withoutEnv('AWS_BEARER_TOKEN_BEDROCK', () => new AnthropicBedrockMantle({ awsRegion: region }))
+    : new AnthropicBedrock({ awsRegion: region, apiKey: null as unknown as string })
   return client as unknown as LlmClient
+}
+
+function withoutEnv<T>(name: string, make: () => T): T {
+  const saved = process.env[name]
+  delete process.env[name]
+  try {
+    return make()
+  } finally {
+    if (saved !== undefined) process.env[name] = saved
+  }
 }
 
 export function usageFrom(u: Anthropic.Usage): Usage {

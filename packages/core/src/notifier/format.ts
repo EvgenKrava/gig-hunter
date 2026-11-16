@@ -1,4 +1,4 @@
-import { approxUsd } from '../prompts/render'
+import { approxUsd, budgetAmount } from '../prompts/render'
 import { FeedbackSchema, PlatformSchema, type Feedback, type Match, type MatchRef, type Platform } from '../schema/index'
 
 export interface InlineKeyboard { inline_keyboard: { text: string; callback_data: string }[][] }
@@ -35,13 +35,12 @@ export function feedbackChosenKeyboard(feedback: Feedback): InlineKeyboard {
   return { inline_keyboard: [[{ text: feedback === 'up' ? '✅ Marked useful' : '✅ Marked not for me', callback_data: 'noop' }]] }
 }
 
-const PLATFORM_LABEL: Record<Platform, string> = { freelancer: 'Freelancer', upwork: 'Upwork' }
+const PLATFORM_LABEL: Record<Platform, string> = { freelancer: 'Freelancer', upwork: 'Upwork', freelancehunt: 'Freelancehunt' }
 
 function budgetLine(job: Match['job']): string {
   const b = job.budget
   if (!b) return 'budget n/a'
-  const range =
-    b.min !== undefined && b.max !== undefined ? `$${b.min}–${b.max}` : b.min !== undefined ? `from $${b.min}` : b.max !== undefined ? `up to $${b.max}` : '$?'
+  const range = budgetAmount(b)
   return (b.type === 'hourly' ? `${range}/h ${b.currency} hourly` : `${range} ${b.currency} fixed`) + approxUsd(b)
 }
 

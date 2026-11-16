@@ -9,6 +9,7 @@ import { ToastProvider } from '../../components/Toast'
 import { CostControls } from './CostControls'
 import { TelegramBlock } from './TelegramBlock'
 import { FreelancerBlock } from './FreelancerBlock'
+import { FreelancehuntBlock } from './FreelancehuntBlock'
 import type { PublicSettings } from '../../api/hooks'
 
 const base = (): PublicSettings => defaultSettings('2026-09-21T10:00:00.000Z')
@@ -57,7 +58,7 @@ describe('FreelancerBlock', () => {
   beforeEach(() => setAuth(mockAuth()))
   it('toggles enabled, saves the query on blur, and saves exactly once via Save query', async () => {
     const onPatch = vi.fn()
-    const s: PublicSettings = { ...base(), platforms: { freelancer: { enabled: false, query: 'react', tokenSet: true, tokenHint: '1234', connectedAs: 'yev' }, upwork: { enabled: false } } }
+    const s: PublicSettings = { ...base(), platforms: { ...base().platforms, freelancer: { enabled: false, query: 'react', tokenSet: true, tokenHint: '1234', connectedAs: 'yev' } } }
     renderWithProviders(<FreelancerBlock settings={s} onPatch={onPatch} />)
     expect(screen.getByText(/connected as yev/i)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('switch', { name: /poll freelancer/i }))
@@ -75,7 +76,7 @@ describe('FreelancerBlock', () => {
     expect(queryPatches()[1]).toEqual([{ platforms: { freelancer: { query: 'node' } } }])
   })
   it('resyncs the search query when settings refetch with a new value', () => {
-    const s: PublicSettings = { ...base(), platforms: { freelancer: { enabled: false, query: 'react', tokenSet: true, tokenHint: '1234', connectedAs: 'yev' }, upwork: { enabled: false } } }
+    const s: PublicSettings = { ...base(), platforms: { ...base().platforms, freelancer: { enabled: false, query: 'react', tokenSet: true, tokenHint: '1234', connectedAs: 'yev' } } }
     const { rerender, queryClient, router } = renderWithProviders(<FreelancerBlock settings={s} onPatch={vi.fn()} />)
     expect(screen.getByLabelText(/search query/i)).toHaveValue('react')
     const s2: PublicSettings = { ...s, platforms: { ...s.platforms, freelancer: { ...s.platforms.freelancer, query: 'node' } } }
@@ -89,5 +90,41 @@ describe('FreelancerBlock', () => {
       </QueryClientProvider>,
     )
     expect(screen.getByLabelText(/search query/i)).toHaveValue('node')
+  })
+})
+
+describe('FreelancehuntBlock', () => {
+  beforeEach(() => setAuth(mockAuth()))
+  const fh = (enabled: boolean, skillIds: number[]): PublicSettings => ({ ...base(), platforms: { ...base().platforms, freelancehunt: { enabled, skillIds } } })
+  it('toggles polling and needs no token', async () => {
+    const onPatch = vi.fn()
+    renderWithProviders(<FreelancehuntBlock settings={fh(false, [28, 99])} onPatch={onPatch} />)
+    expect(screen.getByRole('heading', { name: 'Freelancehunt' })).toBeInTheDocument()
+    expect(screen.queryByPlaceholderText(/token/i)).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('switch', { name: /poll freelancehunt/i }))
+    expect(onPatch).toHaveBeenCalledWith({ platforms: { freelancehunt: { enabled: true } } })
+  })
+  it('quick chip taps update at once and save both changes in one patch', async () => {
+    const onPatch = vi.fn()
+    renderWithProviders(<FreelancehuntBlock settings={fh(true, [28, 99])} onPatch={onPatch} />)
+    const js = screen.getByRole('button', { name: 'Javascript and Typescript' })
+    expect(js).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(js)
+    expect(js).toHaveAttribute('aria-pressed', 'false')
+    await userEvent.click(screen.getByRole('button', { name: 'DevOps' }))
+    expect(screen.getByRole('button', { name: 'DevOps' })).toHaveAttribute('aria-pressed', 'true')
+    await waitFor(() => expect(onPatch).toHaveBeenCalledWith({ platforms: { freelancehunt: { skillIds: [99, 181] } } }))
+    expect(onPatch.mock.calls.filter(([p]) => p.platforms?.freelancehunt?.skillIds)).toHaveLength(1)
+  })
+  it('saves a pending chip change when the card unmounts', async () => {
+    const onPatch = vi.fn()
+    const { unmount } = renderWithProviders(<FreelancehuntBlock settings={fh(true, [28])} onPatch={onPatch} />)
+    await userEvent.click(screen.getByRole('button', { name: 'Python' }))
+    unmount()
+    expect(onPatch).toHaveBeenCalledWith({ platforms: { freelancehunt: { skillIds: [28, 22] } } })
+  })
+  it('asks for at least one skill when none is selected', () => {
+    renderWithProviders(<FreelancehuntBlock settings={fh(true, [])} onPatch={vi.fn()} />)
+    expect(screen.getByText(/pick at least one skill/i)).toBeInTheDocument()
   })
 })

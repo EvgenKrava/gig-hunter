@@ -5,7 +5,7 @@ import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { budgetLabel, timeAgo, verdictTone } from '../../lib/format'
 
-const platformLabel = { freelancer: 'Freelancer', upwork: 'Upwork' } as const
+const platformLabel = { freelancer: 'Freelancer', upwork: 'Upwork', freelancehunt: 'Freelancehunt' } as const
 
 export function MatchCard({ match }: { match: Match }) {
   const { job, score, verdict, feedback } = match

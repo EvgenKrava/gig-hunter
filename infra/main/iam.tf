@@ -16,7 +16,10 @@ locals {
     "arn:aws:bedrock:*::foundation-model/anthropic.*",
     "arn:aws:bedrock:*:${local.account_id}:inference-profile/*anthropic*",
   ]
-  ddb_rw = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:Query", "dynamodb:BatchGetItem"]
+  # Opus 4.7+ / Sonnet 5+ / Haiku 5+ are served by the Mantle (Messages API) endpoint, which signs as `bedrock-mantle`
+  # and authorizes against the account's default project rather than a model ARN.
+  bedrock_mantle_arns = ["arn:aws:bedrock-mantle:*:${local.account_id}:project/*"]
+  ddb_rw              = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:Query", "dynamodb:BatchGetItem"]
 }
 
 data "aws_iam_policy_document" "poller" {
@@ -31,6 +34,10 @@ data "aws_iam_policy_document" "poller" {
   statement {
     actions   = ["bedrock:InvokeModel"]
     resources = local.bedrock_arns
+  }
+  statement {
+    actions   = ["bedrock-mantle:CreateInference"]
+    resources = local.bedrock_mantle_arns
   }
 }
 
@@ -47,6 +54,10 @@ data "aws_iam_policy_document" "api" {
   statement {
     actions   = ["bedrock:InvokeModel"]
     resources = local.bedrock_arns
+  }
+  statement {
+    actions   = ["bedrock-mantle:CreateInference"]
+    resources = local.bedrock_mantle_arns
   }
   statement {
     actions   = ["lambda:InvokeFunction"]

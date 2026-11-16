@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   ProfileInputSchema, SettingsSchema, SettingsPatchSchema, defaultSettings, DEFAULT_MODEL,
-  PromptsPatchSchema, JobSchema, MatchSchema, ScoreResultSchema,
+  PromptsPatchSchema, JobSchema, MatchSchema, ScoreResultSchema, FREELANCEHUNT_SKILLS,
 } from './index'
 
 const now = '2026-09-20T10:00:00.000Z'
@@ -39,6 +39,21 @@ describe('SettingsSchema', () => {
     expect(SettingsPatchSchema.safeParse({ notifyThreshold: 101 }).success).toBe(false)
     expect(SettingsPatchSchema.safeParse({ telegram: { webhookSecret: 'x' } }).success).toBe(false)
     expect(SettingsPatchSchema.safeParse({ telegram: { chatId: '-100123' }, platforms: { freelancer: { enabled: true, query: 'react' } } }).success).toBe(true)
+  })
+  it('stored settings without freelancehunt get it switched off with the default skills', () => {
+    const s = SettingsSchema.parse({ updatedAt: now })
+    expect(s.platforms.freelancehunt).toEqual({ enabled: false, skillIds: [28, 99, 175, 180, 169] })
+  })
+  it('patch accepts freelancehunt enabled/skillIds and rejects unknown keys', () => {
+    expect(SettingsPatchSchema.safeParse({ platforms: { freelancehunt: { skillIds: [28] } } }).success).toBe(true)
+    expect(SettingsPatchSchema.safeParse({ platforms: { freelancehunt: { enabled: true } } }).success).toBe(true)
+    expect(SettingsPatchSchema.safeParse({ platforms: { freelancehunt: { token: 'x' } } }).success).toBe(false)
+    expect(SettingsPatchSchema.safeParse({ platforms: { freelancehunt: { skillIds: [1.5] } } }).success).toBe(false)
+  })
+  it('FREELANCEHUNT_SKILLS lists unique ids including the defaults', () => {
+    const ids = FREELANCEHUNT_SKILLS.map((s) => s.id)
+    expect(new Set(ids).size).toBe(ids.length)
+    for (const id of [28, 99, 175, 180, 169, 181]) expect(ids).toContain(id)
   })
 })
 

@@ -3,6 +3,7 @@ import { usePatchSettings, useSettings } from '../api/hooks'
 import { useToast } from '../components/Toast'
 import { FormCardSkeleton, SkeletonPage } from '../components/ui/Skeleton'
 import { CostControls } from '../features/settings/CostControls'
+import { FreelancehuntBlock } from '../features/settings/FreelancehuntBlock'
 import { FreelancerBlock } from '../features/settings/FreelancerBlock'
 import { MatchingBlock } from '../features/settings/MatchingBlock'
 import { PromptsBlock } from '../features/settings/PromptsBlock'
@@ -28,6 +29,7 @@ function SettingsPage() {
         <CostControls settings={s} onPatch={onPatch} />
         <TelegramBlock settings={s} onPatch={onPatch} />
         <FreelancerBlock settings={s} onPatch={onPatch} />
+        <FreelancehuntBlock settings={s} onPatch={onPatch} />
         <UpworkBlock />
         <MatchingBlock settings={s} onPatch={onPatch} />
         <PromptsBlock />
