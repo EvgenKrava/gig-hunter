@@ -1,0 +1,304 @@
+{
+ "data": [
+  {
+   "id": 1664916,
+   "type": "project",
+   "attributes": {
+    "name": "Впровадження функціоналу варіантів товару в інтернет-магазині",
+    "description": "ТЕХНІЧНЕ ЗАВДАННЯ mebli-zahid.comПлатформа: Joomla 3.10\nКомпонент магазину: JoomShopping1. Мета роботи Реалізувати в картках товарів можливість вибору покупцем різних варіантів товару за кольором та розміром.\nДля цього необхідно використати наявні можливості JoomShopping або встановити відповідний м",
+    "description_html": "",
+    "skills": [
+     {
+      "id": 99,
+      "name": "Web Programming"
+     },
+     {
+      "id": 1,
+      "name": "PHP"
+     }
+    ],
+    "status": {
+     "id": 11,
+     "name": "Open for proposals"
+    },
+    "budget": {
+     "amount": 2000,
+     "currency": "UAH"
+    },
+    "bid_count": 62,
+    "is_remote_job": false,
+    "is_premium": false,
+    "location": null,
+    "safe_type": "employer",
+    "is_personal": false,
+    "employer": {
+     "id": 1000,
+     "type": "employer",
+     "login": "employer1",
+     "first_name": "Test",
+     "last_name": "Employer1",
+     "self": "https://api.freelancehunt.com/v2/employers/1000",
+     "rating": 837,
+     "completed_projects": 26,
+     "positive_reviews": 25,
+     "negative_reviews": 0,
+     "average_grade": 10
+    },
+    "freelancer": null,
+    "tags": [
+     {
+      "id": 12908,
+      "name": "JoomShopping"
+     },
+     {
+      "id": 13065555,
+      "name": "Варіанти товару"
+     },
+     {
+      "id": 13082580,
+      "name": "Joomla 3.10"
+     }
+    ],
+    "updates": [],
+    "published_at": "2026-11-16T10:35:39+02:00",
+    "expired_at": "2026-11-30T10:35:39+02:00"
+   },
+   "links": {
+    "self": {
+     "api": "https://api.freelancehunt.com/v2/projects/1664916",
+     "web": "https://freelancehunt.com/project/vprovadzhennya-funktsionalu-variantiv-tovaru-internet-magazini/1664916.html"
+    },
+    "comments": "https://api.freelancehunt.com/v2/projects/1664916/comments",
+    "bids": "https://api.freelancehunt.com/v2/projects/1664916/bids"
+   }
+  },
+  {
+   "id": 1664900,
+   "type": "project",
+   "attributes": {
+    "name": "Фахівець з ШІ-автоматизації бізнес-процесів",
+    "description": "Шукаємо фахівця, який допоможе автоматизувати бізнес-процеси. Потрібно розібратися в поточних процесах, запропонувати, що можна автоматизувати, і налаштувати та протестувати робочі сценарії. Конкретні завдання й обсяг роботи обговоримо після відгуку.\nОбов’язково вміти працювати з Claude та n8n і мат",
+    "description_html": "",
+    "skills": [
+     {
+      "id": 175,
+      "name": "AI & Machine Learning"
+     }
+    ],
+    "status": {
+     "id": 11,
+     "name": "Open for proposals"
+    },
+    "budget": null,
+    "bid_count": 54,
+    "is_remote_job": false,
+    "is_premium": false,
+    "location": null,
+    "safe_type": "employer",
+    "is_personal": false,
+    "employer": {
+     "id": 1001,
+     "type": "employer",
+     "login": "employer2",
+     "first_name": "Test",
+     "last_name": "Employer2",
+     "self": "https://api.freelancehunt.com/v2/employers/1001",
+     "rating": 85,
+     "completed_projects": 0,
+     "positive_reviews": 0,
+     "negative_reviews": 0,
+     "average_grade": null
+    },
+    "freelancer": null,
+    "tags": [
+     {
+      "id": 4509426,
+      "name": "Автоматизація процесів"
+     },
+     {
+      "id": 10116897,
+      "name": "N8N"
+     },
+     {
+      "id": 13049409,
+      "name": "Claude"
+     }
+    ],
+    "updates": [],
+    "published_at": "2026-11-16T08:43:04+02:00",
+    "expired_at": "2026-11-30T08:41:39+02:00"
+   },
+   "links": {
+    "self": {
+     "api": "https://api.freelancehunt.com/v2/projects/1664900",
+     "web": "https://freelancehunt.com/project/fahivets-shi-avtomatizatsiyi-biznes-protsesiv/1664900.html"
+    },
+    "comments": "https://api.freelancehunt.com/v2/projects/1664900/comments",
+    "bids": "https://api.freelancehunt.com/v2/projects/1664900/bids"
+   }
+  },
+  {
+   "id": 1664830,
+   "type": "project",
+   "attributes": {
+    "name": "Zoho crm проект",
+    "description": "Внедрение AI-системы маркетинга : интеграция ChatGPT, Zoho CRM, WorkDrive, Social и Flow, автоматизация мониторинга конкурентов, создания контента, рекламы, лидогенерации и аналитики.",
+    "description_html": "",
+    "skills": [
+     {
+      "id": 99,
+      "name": "Web Programming"
+     },
+     {
+      "id": 169,
+      "name": "Data Parsing"
+     }
+    ],
+    "status": {
+     "id": 11,
+     "name": "Open for proposals"
+    },
+    "budget": {
+     "amount": 500,
+     "currency": "EUR"
+    },
+    "bid_count": 114,
+    "is_remote_job": false,
+    "is_premium": false,
+    "location": null,
+    "safe_type": null,
+    "is_personal": false,
+    "employer": {
+     "id": 1002,
+     "type": "employer",
+     "login": "employer3",
+     "first_name": "Test",
+     "last_name": "Employer3",
+     "self": "https://api.freelancehunt.com/v2/employers/1002",
+     "company": {
+      "id": 22245,
+      "name": "Bimsoft"
+     },
+     "rating": 562,
+     "completed_projects": 6,
+     "positive_reviews": 6,
+     "negative_reviews": 0,
+     "average_grade": 10
+    },
+    "freelancer": null,
+    "tags": [
+     {
+      "id": 1105771,
+      "name": "zoho crm"
+     },
+     {
+      "id": 13049407,
+      "name": "ChatGPT"
+     },
+     {
+      "id": 13082420,
+      "name": "WorkDrive"
+     }
+    ],
+    "updates": [],
+    "published_at": "2026-11-15T15:50:25+02:00",
+    "expired_at": "2026-11-29T15:50:25+02:00"
+   },
+   "links": {
+    "self": {
+     "api": "https://api.freelancehunt.com/v2/projects/1664830",
+     "web": "https://freelancehunt.com/project/zoho-crm-proekt/1664830.html"
+    },
+    "comments": "https://api.freelancehunt.com/v2/projects/1664830/comments",
+    "bids": "https://api.freelancehunt.com/v2/projects/1664830/bids"
+   }
+  },
+  {
+   "id": 1664711,
+   "type": "project",
+   "attributes": {
+    "name": "Шукаю спеціаліста, який допоможе знайти найбільш вигідні та легальні варіанти використання програм д",
+    "description": "Потрібно такі програми нових версій  SketchUp  Autodesk AutoCAD  Autodesk Revit  Lumion  Мета: зібрати оптимальний набір програм для навчання архітектурі та створення 3D-проєктів із мінімальними витратами.",
+    "description_html": "",
+    "skills": [
+     {
+      "id": 99,
+      "name": "Web Programming"
+     },
+     {
+      "id": 169,
+      "name": "Data Parsing"
+     }
+    ],
+    "status": {
+     "id": 11,
+     "name": "Open for proposals"
+    },
+    "budget": {
+     "amount": 111,
+     "currency": "USD"
+    },
+    "bid_count": 52,
+    "is_remote_job": false,
+    "is_premium": false,
+    "location": null,
+    "safe_type": "person",
+    "is_personal": false,
+    "employer": {
+     "id": 1003,
+     "type": "employer",
+     "login": "employer4",
+     "first_name": "Test",
+     "last_name": "Employer4",
+     "self": "https://api.freelancehunt.com/v2/employers/1003",
+     "rating": 175,
+     "completed_projects": 0,
+     "positive_reviews": 0,
+     "negative_reviews": 0,
+     "average_grade": null
+    },
+    "freelancer": null,
+    "tags": [
+     {
+      "id": 10637371,
+      "name": "SketchUp"
+     },
+     {
+      "id": 10637372,
+      "name": "Lumion"
+     },
+     {
+      "id": 10638651,
+      "name": "AutoCAD"
+     },
+     {
+      "id": 10638653,
+      "name": "Revit"
+     }
+    ],
+    "updates": [
+     {
+      "description": "Ціна виставлена як \"111\" не є поточною на проект. Просто прописана",
+      "description_html": "<p>Ціна виставлена як &#34;111&#34; не є поточною на проект. Просто прописана </p>",
+      "published_at": "2026-11-14T16:35:19+02:00"
+     }
+    ],
+    "published_at": "2026-11-14T15:44:45+02:00",
+    "expired_at": "2026-11-28T15:44:45+02:00"
+   },
+   "links": {
+    "self": {
+     "api": "https://api.freelancehunt.com/v2/projects/1664711",
+     "web": "https://freelancehunt.com/project/shukayu-spetsialista-yakiy-dopomozhe-znayti-naybilsh/1664711.html"
+    },
+    "comments": "https://api.freelancehunt.com/v2/projects/1664711/comments",
+    "bids": "https://api.freelancehunt.com/v2/projects/1664711/bids"
+   }
+  }
+ ],
+ "links": {
+  "self": "https://api.freelancehunt.com/v2/projects?filter[skill_id]=28,99",
+  "next": "https://api.freelancehunt.com/v2/projects?filter[skill_id]=28,99&page[number]=2",
+  "last": "https://api.freelancehunt.com/v2/projects?filter[skill_id]=28,99&page[number]=6"
+ }
+}

@@ -31,6 +31,40 @@ export const FreelancerSettingsSchema = z.object({
   connectedAs: z.string().optional(),
 })
 
+/** Freelancehunt "Programming" skills (ids from GET /v2/skills, 2026-11-16) plus DevOps. */
+export const FREELANCEHUNT_SKILLS: { id: number; name: string }[] = [
+  { id: 28, name: 'Javascript and Typescript' },
+  { id: 99, name: 'Web Programming' },
+  { id: 175, name: 'AI & Machine Learning' },
+  { id: 180, name: 'Bot Development' },
+  { id: 169, name: 'Data Parsing' },
+  { id: 181, name: 'DevOps' },
+  { id: 86, name: 'Databases & SQL' },
+  { id: 57, name: 'Testing & QA' },
+  { id: 124, name: 'HTML & CSS' },
+  { id: 22, name: 'Python' },
+  { id: 1, name: 'PHP' },
+  { id: 13, name: 'Java' },
+  { id: 24, name: 'C#' },
+  { id: 2, name: 'C & C++' },
+  { id: 103, name: 'Desktop Apps' },
+  { id: 78, name: 'Content Management Systems' },
+  { id: 199, name: 'BI & Data Analytics' },
+  { id: 182, name: 'Cryptocurrency & Blockchain' },
+  { id: 176, name: 'Embedded Systems & Microcontrollers' },
+  { id: 88, name: 'Gaming Apps' },
+  { id: 185, name: 'AR & VR Development' },
+]
+export const DEFAULT_FREELANCEHUNT_SKILL_IDS = [28, 99, 175, 180, 169] as const
+
+const SkillIdsSchema = z.array(z.number().int().positive()).max(30)
+
+/** Public project list — no token. Polled when enabled and at least one skill is chosen. */
+export const FreelancehuntSettingsSchema = z.object({
+  enabled: z.boolean().default(false),
+  skillIds: SkillIdsSchema.default(() => [...DEFAULT_FREELANCEHUNT_SKILL_IDS]),
+})
+
 /** Scheduler ticks every 15 min; a user is polled only when this many minutes have passed since lastPolledAt. */
 export const POLL_INTERVAL_OPTIONS = [15, 30, 60, 120, 240, 720, 1440] as const
 
@@ -47,6 +81,7 @@ export const SettingsSchema = z.object({
     .object({
       freelancer: FreelancerSettingsSchema.prefault({}),
       upwork: z.object({ enabled: z.literal(false).default(false) }).prefault({}),
+      freelancehunt: FreelancehuntSettingsSchema.prefault({}),
     })
     .prefault({}),
   updatedAt: IsoDate,
@@ -63,6 +98,7 @@ export const SettingsPatchSchema = z.strictObject({
   platforms: z
     .strictObject({
       freelancer: z.strictObject({ enabled: z.boolean().optional(), query: z.string().max(200).optional() }).optional(),
+      freelancehunt: z.strictObject({ enabled: z.boolean().optional(), skillIds: SkillIdsSchema.optional() }).optional(),
     })
     .optional(),
   telegram: z.strictObject({ chatId: z.string().max(64).optional() }).optional(),
