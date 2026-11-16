@@ -9,6 +9,7 @@ import { ToastProvider } from '../../components/Toast'
 import { CostControls } from './CostControls'
 import { TelegramBlock } from './TelegramBlock'
 import { FreelancerBlock } from './FreelancerBlock'
+import { FreelancehuntBlock } from './FreelancehuntBlock'
 import type { PublicSettings } from '../../api/hooks'
 
 const base = (): PublicSettings => defaultSettings('2026-09-21T10:00:00.000Z')
@@ -89,5 +90,32 @@ describe('FreelancerBlock', () => {
       </QueryClientProvider>,
     )
     expect(screen.getByLabelText(/search query/i)).toHaveValue('node')
+  })
+})
+
+describe('FreelancehuntBlock', () => {
+  beforeEach(() => setAuth(mockAuth()))
+  const fh = (enabled: boolean, skillIds: number[]): PublicSettings => ({ ...base(), platforms: { ...base().platforms, freelancehunt: { enabled, skillIds } } })
+  it('toggles polling and needs no token', async () => {
+    const onPatch = vi.fn()
+    renderWithProviders(<FreelancehuntBlock settings={fh(false, [28, 99])} onPatch={onPatch} />)
+    expect(screen.getByRole('heading', { name: 'Freelancehunt' })).toBeInTheDocument()
+    expect(screen.queryByPlaceholderText(/token/i)).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('switch', { name: /poll freelancehunt/i }))
+    expect(onPatch).toHaveBeenCalledWith({ platforms: { freelancehunt: { enabled: true } } })
+  })
+  it('skill chips add and remove ids', async () => {
+    const onPatch = vi.fn()
+    renderWithProviders(<FreelancehuntBlock settings={fh(true, [28, 99])} onPatch={onPatch} />)
+    const js = screen.getByRole('button', { name: 'Javascript and Typescript' })
+    expect(js).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(js)
+    expect(onPatch).toHaveBeenLastCalledWith({ platforms: { freelancehunt: { skillIds: [99] } } })
+    await userEvent.click(screen.getByRole('button', { name: 'DevOps' }))
+    expect(onPatch).toHaveBeenLastCalledWith({ platforms: { freelancehunt: { skillIds: [28, 99, 181] } } })
+  })
+  it('asks for at least one skill when none is selected', () => {
+    renderWithProviders(<FreelancehuntBlock settings={fh(true, [])} onPatch={vi.fn()} />)
+    expect(screen.getByText(/pick at least one skill/i)).toBeInTheDocument()
   })
 })
