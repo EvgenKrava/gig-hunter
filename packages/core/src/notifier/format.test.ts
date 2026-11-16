@@ -17,6 +17,14 @@ describe('formatMatchMessage', () => {
     ])
     expect(text).toMatchSnapshot()
   })
+  it('labels Freelancehunt matches and shows the USD hint for UAH budgets', () => {
+    const m = { ...SAMPLE_MATCH, job: { ...SAMPLE_MATCH.job, platform: 'freelancehunt' as const, externalId: '1664916', budget: { min: 2000, max: 2000, currency: 'UAH', type: 'fixed' as const, rateToUsd: 0.022 } } }
+    const { text, replyMarkup } = formatMatchMessage(m, 'https://app')
+    expect(text).toContain('· Freelancehunt')
+    expect(text).toContain('💰 $2000 UAH fixed (≈ $44 USD)')
+    expect(text).toContain('https://app/jobs/freelancehunt/1664916')
+    expect(parseFeedbackCallbackData(replyMarkup.inline_keyboard[0]![1]!.callback_data)).toEqual({ platform: 'freelancehunt', externalId: '1664916', feedback: 'down' })
+  })
   it('escapes HTML in title and reasoning and omits the risks line when empty', () => {
     const m = { ...SAMPLE_MATCH, job: { ...SAMPLE_MATCH.job, title: 'a <b> & c' }, score: { ...SAMPLE_MATCH.score!, reasoning: '<x>', risks: [] } }
     const { text } = formatMatchMessage(m, 'https://app')

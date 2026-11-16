@@ -20,10 +20,14 @@ export interface PipelineDeps {
   log: Logger
 }
 
-const PLATFORM_SECRET: Record<Platform, UserSecretName | null> = { freelancer: 'freelancer/token', upwork: null }
+/** Secret each platform needs; null = the platform's job feed is public. */
+const PLATFORM_SECRET: Record<Platform, UserSecretName | null> = { freelancer: 'freelancer/token', upwork: null, freelancehunt: null }
 /** Cost guard: at most this many LLM scoring calls per platform per run. The rest is left unwritten and picked up next run. */
 export const MAX_SCORED_PER_RUN = 20
-const platformQuery = (settings: Settings, platform: Platform) => (platform === 'freelancer' ? settings.platforms.freelancer.query : '')
+const platformQuery = (settings: Settings, platform: Platform): string =>
+  platform === 'freelancer' ? settings.platforms.freelancer.query
+    : platform === 'freelancehunt' ? settings.platforms.freelancehunt.skillIds.join(',')
+      : ''
 const refOf = (m: Match) => ({ platform: m.job.platform, externalId: m.job.externalId })
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e))
 
@@ -91,8 +95,8 @@ export async function runForUser(deps: PipelineDeps, userId: string, trigger: Ru
       const s = stats(platform)
       try {
         const secretName = PLATFORM_SECRET[platform]
-        const token = secretName ? await deps.secrets.getUserSecret(userId, secretName) : null
-        if (!token) {
+        const token = secretName ? await deps.secrets.getUserSecret(userId, secretName) : ''
+        if (token === null || (secretName && !token)) {
           s.error = 'token_missing'
           continue
         }

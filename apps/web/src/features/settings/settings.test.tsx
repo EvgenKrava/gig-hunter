@@ -57,7 +57,7 @@ describe('FreelancerBlock', () => {
   beforeEach(() => setAuth(mockAuth()))
   it('toggles enabled, saves the query on blur, and saves exactly once via Save query', async () => {
     const onPatch = vi.fn()
-    const s: PublicSettings = { ...base(), platforms: { freelancer: { enabled: false, query: 'react', tokenSet: true, tokenHint: '1234', connectedAs: 'yev' }, upwork: { enabled: false } } }
+    const s: PublicSettings = { ...base(), platforms: { ...base().platforms, freelancer: { enabled: false, query: 'react', tokenSet: true, tokenHint: '1234', connectedAs: 'yev' } } }
     renderWithProviders(<FreelancerBlock settings={s} onPatch={onPatch} />)
     expect(screen.getByText(/connected as yev/i)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('switch', { name: /poll freelancer/i }))
@@ -75,7 +75,7 @@ describe('FreelancerBlock', () => {
     expect(queryPatches()[1]).toEqual([{ platforms: { freelancer: { query: 'node' } } }])
   })
   it('resyncs the search query when settings refetch with a new value', () => {
-    const s: PublicSettings = { ...base(), platforms: { freelancer: { enabled: false, query: 'react', tokenSet: true, tokenHint: '1234', connectedAs: 'yev' }, upwork: { enabled: false } } }
+    const s: PublicSettings = { ...base(), platforms: { ...base().platforms, freelancer: { enabled: false, query: 'react', tokenSet: true, tokenHint: '1234', connectedAs: 'yev' } } }
     const { rerender, queryClient, router } = renderWithProviders(<FreelancerBlock settings={s} onPatch={vi.fn()} />)
     expect(screen.getByLabelText(/search query/i)).toHaveValue('react')
     const s2: PublicSettings = { ...s, platforms: { ...s.platforms, freelancer: { ...s.platforms.freelancer, query: 'node' } } }
