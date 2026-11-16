@@ -8,6 +8,8 @@ interface ProjectsResponse { data?: FreelancehuntProject[]; links?: { next?: str
 
 /** Cost/politeness guard: pages of 10 projects read per run. */
 export const MAX_PAGES = 5
+/** A stalled API must not eat the poller Lambda's 300 s budget. */
+const TIMEOUT_MS = 15_000
 
 /** Freelancehunt public project list (no token). `query` is a comma-separated list of skill ids. */
 export class FreelancehuntSource implements JobSource {
@@ -23,7 +25,7 @@ export class FreelancehuntSource implements JobSource {
     const params = new URLSearchParams({ 'filter[skill_id]': skillIds, 'page[number]': String(n) })
     let res: Response
     try {
-      res = await this.fetchFn(`${this.baseUrl}/projects?${params}`, { headers: { accept: 'application/json' } })
+      res = await this.fetchFn(`${this.baseUrl}/projects?${params}`, { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(TIMEOUT_MS) })
     } catch (e) {
       throw new SourceError(`freelancehunt: network error: ${(e as Error).message}`, 'network')
     }

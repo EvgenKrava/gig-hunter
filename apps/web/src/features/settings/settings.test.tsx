@@ -104,15 +104,24 @@ describe('FreelancehuntBlock', () => {
     await userEvent.click(screen.getByRole('switch', { name: /poll freelancehunt/i }))
     expect(onPatch).toHaveBeenCalledWith({ platforms: { freelancehunt: { enabled: true } } })
   })
-  it('skill chips add and remove ids', async () => {
+  it('quick chip taps update at once and save both changes in one patch', async () => {
     const onPatch = vi.fn()
     renderWithProviders(<FreelancehuntBlock settings={fh(true, [28, 99])} onPatch={onPatch} />)
     const js = screen.getByRole('button', { name: 'Javascript and Typescript' })
     expect(js).toHaveAttribute('aria-pressed', 'true')
     await userEvent.click(js)
-    expect(onPatch).toHaveBeenLastCalledWith({ platforms: { freelancehunt: { skillIds: [99] } } })
+    expect(js).toHaveAttribute('aria-pressed', 'false')
     await userEvent.click(screen.getByRole('button', { name: 'DevOps' }))
-    expect(onPatch).toHaveBeenLastCalledWith({ platforms: { freelancehunt: { skillIds: [28, 99, 181] } } })
+    expect(screen.getByRole('button', { name: 'DevOps' })).toHaveAttribute('aria-pressed', 'true')
+    await waitFor(() => expect(onPatch).toHaveBeenCalledWith({ platforms: { freelancehunt: { skillIds: [99, 181] } } }))
+    expect(onPatch.mock.calls.filter(([p]) => p.platforms?.freelancehunt?.skillIds)).toHaveLength(1)
+  })
+  it('saves a pending chip change when the card unmounts', async () => {
+    const onPatch = vi.fn()
+    const { unmount } = renderWithProviders(<FreelancehuntBlock settings={fh(true, [28])} onPatch={onPatch} />)
+    await userEvent.click(screen.getByRole('button', { name: 'Python' }))
+    unmount()
+    expect(onPatch).toHaveBeenCalledWith({ platforms: { freelancehunt: { skillIds: [28, 22] } } })
   })
   it('asks for at least one skill when none is selected', () => {
     renderWithProviders(<FreelancehuntBlock settings={fh(true, [])} onPatch={vi.fn()} />)

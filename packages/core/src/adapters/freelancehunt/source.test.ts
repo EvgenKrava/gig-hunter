@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { FreelancehuntSource } from './source'
+import { normalizeFreelancehuntProject } from './normalize'
 import { SourceError } from '../types'
 import type { NbuRates } from './fx'
 import fixture from './__fixtures__/projects.json'
@@ -36,11 +37,28 @@ describe('FreelancehuntSource.fetchRecent', () => {
     expect(job!.language).toBeUndefined()
   })
 
-  it('maps a missing budget to null and a project without Safe to paymentVerified false', async () => {
+  it('maps a missing budget to null and an undocumented safe_type ("company") to unknown payment status', async () => {
     const jobs = await new FreelancehuntSource(vi.fn().mockResolvedValue(json(fixture)), rates({ EUR: 1.1 })).fetchRecent({ query: '28', since, token: '' })
     expect(jobs[1]!.budget).toBeNull()
     expect(jobs[2]!.budget).toEqual({ min: 500, max: 500, currency: 'EUR', type: 'fixed', rateToUsd: 1.1 })
-    expect(jobs[2]!.client?.paymentVerified).toBe(false)
+    expect(jobs[2]!.client).not.toHaveProperty('paymentVerified')
+  })
+
+  it('bounds each request with an abort signal', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(json(fixture))
+    await new FreelancehuntSource(fetchFn, rates({})).fetchRecent({ query: '28', since, token: '' })
+    expect(fetchFn.mock.calls[0]![1]?.signal).toBeInstanceOf(AbortSignal)
+  })
+})
+
+describe('normalizeFreelancehuntProject safe_type', () => {
+  const project = (safe_type: string | null) => ({ ...fixture.data[0]!, attributes: { ...fixture.data[0]!.attributes, safe_type } })
+  it('documented Safe variants are payment-verified, null (direct payment) is not', () => {
+    for (const t of ['employer', 'developer', 'split', 'employer_cashless']) expect(normalizeFreelancehuntProject(project(t)).client?.paymentVerified).toBe(true)
+    expect(normalizeFreelancehuntProject(project(null)).client?.paymentVerified).toBe(false)
+  })
+  it('undocumented values leave payment status unknown', () => {
+    expect(normalizeFreelancehuntProject(project('person')).client).not.toHaveProperty('paymentVerified')
   })
 
   it('leaves rateToUsd out when the rate is unknown', async () => {

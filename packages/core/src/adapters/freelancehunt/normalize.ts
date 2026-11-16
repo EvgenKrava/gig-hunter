@@ -21,9 +21,18 @@ export interface FreelancehuntProject {
   }
 }
 
+/** Documented Safe (escrow) variants; `null` means direct payment. Other values seen live ("person", "company") are undocumented. */
+const SAFE_TYPES = new Set(['employer', 'developer', 'split', 'employer_cashless'])
+
+/** true for Safe, false for direct payment, undefined (unknown → the LLM judges) for undocumented values. */
+function paymentVerified(safeType: string | null | undefined): boolean | undefined {
+  if (safeType === null) return false
+  return safeType && SAFE_TYPES.has(safeType) ? true : undefined
+}
+
 /**
- * Freelancehunt gives one budget amount, used as both bounds. `safe_type` is set when the project
- * runs through Safe (escrow), which stands in for "payment verified". Grades are 0–10, halved to 0–5.
+ * Freelancehunt gives one budget amount, used as both bounds. Safe (escrow) stands in for
+ * "payment verified". Grades are 0–10, halved to 0–5.
  * `usdPer` is USD per 1 unit of the budget currency, when known.
  */
 export function normalizeFreelancehuntProject(p: FreelancehuntProject, usdPer?: number): Job {
@@ -35,6 +44,7 @@ export function normalizeFreelancehuntProject(p: FreelancehuntProject, usdPer?: 
       : null
   const e = a.employer
   const reviews = e ? (e.positive_reviews ?? 0) + (e.negative_reviews ?? 0) : undefined
+  const verified = paymentVerified(a.safe_type)
   return JobSchema.parse({
     platform: 'freelancehunt',
     externalId: String(p.id),
@@ -47,7 +57,7 @@ export function normalizeFreelancehuntProject(p: FreelancehuntProject, usdPer?: 
     client: {
       ...(typeof e?.average_grade === 'number' ? { rating: e.average_grade / 2 } : {}),
       ...(reviews !== undefined ? { reviews } : {}),
-      paymentVerified: Boolean(a.safe_type),
+      ...(verified !== undefined ? { paymentVerified: verified } : {}),
     },
   })
 }

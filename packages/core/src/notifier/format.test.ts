@@ -21,7 +21,7 @@ describe('formatMatchMessage', () => {
     const m = { ...SAMPLE_MATCH, job: { ...SAMPLE_MATCH.job, platform: 'freelancehunt' as const, externalId: '1664916', budget: { min: 2000, max: 2000, currency: 'UAH', type: 'fixed' as const, rateToUsd: 0.022 } } }
     const { text, replyMarkup } = formatMatchMessage(m, 'https://app')
     expect(text).toContain('· Freelancehunt')
-    expect(text).toContain('💰 $2000 UAH fixed (≈ $44 USD)')
+    expect(text).toContain('💰 2000 UAH fixed (≈ $44 USD)')
     expect(text).toContain('https://app/jobs/freelancehunt/1664916')
     expect(parseFeedbackCallbackData(replyMarkup.inline_keyboard[0]![1]!.callback_data)).toEqual({ platform: 'freelancehunt', externalId: '1664916', feedback: 'down' })
   })
@@ -38,7 +38,7 @@ describe('formatMatchMessage', () => {
     const none = { ...SAMPLE_MATCH, job: { ...SAMPLE_MATCH.job, budget: null } }
     expect(formatMatchMessage(none, 'x').text).toContain('💰 budget n/a')
     const inr = { ...SAMPLE_MATCH, job: { ...SAMPLE_MATCH.job, budget: { min: 12500, max: 37500, currency: 'INR', type: 'fixed' as const, rateToUsd: 0.0104 } } }
-    expect(formatMatchMessage(inr, 'x').text).toContain('💰 $12500–37500 INR fixed (≈ $130–390 USD)')
+    expect(formatMatchMessage(inr, 'x').text).toContain('💰 12500–37500 INR fixed (≈ $130–390 USD)')
   })
 })
 

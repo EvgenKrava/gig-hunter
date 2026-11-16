@@ -40,15 +40,27 @@ describe('NbuRates.usdPer', () => {
     expect(await rates.usdPer('XYZ')).toBeUndefined()
   })
 
-  it('returns undefined on network or HTTP failure and retries on the next call', async () => {
+  it('returns undefined on network or HTTP failure and retries only after 15 minutes', async () => {
     const fetchFn = vi.fn()
       .mockRejectedValueOnce(new Error('ECONNRESET'))
       .mockResolvedValueOnce(json({ error: 'down' }, 500))
       .mockResolvedValueOnce(json(NBU))
-    const rates = new NbuRates(fetchFn)
+    let now = new Date('2026-11-16T10:00:00Z')
+    const rates = new NbuRates(fetchFn, () => now)
     expect(await rates.usdPer('UAH')).toBeUndefined()
+    now = new Date('2026-11-16T10:14:00Z')
     expect(await rates.usdPer('UAH')).toBeUndefined()
+    expect(fetchFn).toHaveBeenCalledTimes(1)
+    now = new Date('2026-11-16T10:16:00Z')
+    expect(await rates.usdPer('UAH')).toBeUndefined()
+    now = new Date('2026-11-16T10:32:00Z')
     expect(await rates.usdPer('UAH')).toBeCloseTo(0.022013, 5)
     expect(fetchFn).toHaveBeenCalledTimes(3)
+  })
+
+  it('bounds the NBU request with an abort signal so a stalled host cannot hang the poller', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(json(NBU))
+    await new NbuRates(fetchFn).usdPer('UAH')
+    expect(fetchFn.mock.calls[0]![1]?.signal).toBeInstanceOf(AbortSignal)
   })
 })

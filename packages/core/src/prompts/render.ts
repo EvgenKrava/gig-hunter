@@ -26,8 +26,14 @@ export function renderTemplate(template: string, blocks: RenderBlocks, required:
 }
 
 /** "$150–300", "$2000" when both bounds are equal, "from $x", "up to $y", or '' when neither is known. */
-export const moneyRange = (min?: number, max?: number) =>
-  min !== undefined && max !== undefined ? (min === max ? `$${min}` : `$${min}–${max}`) : min !== undefined ? `from $${min}` : max !== undefined ? `up to $${max}` : ''
+export const moneyRange = (min?: number, max?: number, sign = '$') =>
+  min !== undefined && max !== undefined ? (min === max ? `${sign}${min}` : `${sign}${min}–${max}`) : min !== undefined ? `from ${sign}${min}` : max !== undefined ? `up to ${sign}${max}` : ''
+
+/** The budget's amount in its own currency: "$150–300" for USD, "2000" for UAH (the currency code follows it). */
+export function budgetAmount(b: NonNullable<Job['budget']>): string {
+  const usd = b.currency.toUpperCase() === 'USD'
+  return moneyRange(b.min, b.max, usd ? '$' : '') || (usd ? '$?' : '?')
+}
 
 /** " (≈ $130–390 USD)" for non-USD budgets the platform priced with an exchange rate; empty otherwise. */
 export function approxUsd(b: Job['budget']): string {
@@ -54,7 +60,7 @@ export function renderProfile(p: Profile): string {
 export function renderJob(j: Job): string {
   let budget = 'not specified'
   if (j.budget) {
-    const range = moneyRange(j.budget.min, j.budget.max)
+    const range = budgetAmount(j.budget)
     budget = (j.budget.type === 'hourly' ? `${range}/h ${j.budget.currency} (hourly)` : `${range} ${j.budget.currency} (fixed)`) + approxUsd(j.budget)
   }
   const client = j.client

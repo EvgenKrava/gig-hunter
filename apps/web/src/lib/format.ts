@@ -1,4 +1,4 @@
-import { approxUsd, moneyRange } from '@gighunter/core/prompts'
+import { approxUsd, budgetAmount } from '@gighunter/core/prompts'
 import type { Job, MatchStatus, Verdict } from '@gighunter/core/schema'
 
 export type BadgeTone = 'green' | 'amber' | 'red' | 'slate' | 'brand'
@@ -15,7 +15,7 @@ export function timeAgo(iso: string, now = new Date()): string {
 
 export function budgetLabel(b: Job['budget']): string {
   if (!b) return 'budget n/a'
-  const range = moneyRange(b.min, b.max) || '$?'
+  const range = budgetAmount(b)
   return (b.type === 'hourly' ? `${range}/h ${b.currency} hourly` : `${range} ${b.currency} fixed`) + approxUsd(b)
 }
 

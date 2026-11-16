@@ -41,6 +41,11 @@ describe('renderers', () => {
     expect(renderJob({ ...SAMPLE_JOB, budget: { min: 20, max: 40, currency: 'USD', type: 'hourly' } })).toContain('Budget: $20–40/h USD (hourly)')
     expect(renderJob({ ...SAMPLE_JOB, budget: null })).toContain('Budget: not specified')
   })
+  it('renderJob never puts a dollar sign on a non-USD amount, even without a rate', () => {
+    expect(renderJob({ ...SAMPLE_JOB, budget: { min: 2000, max: 2000, currency: 'UAH', type: 'fixed' } })).toContain('Budget: 2000 UAH (fixed)')
+    expect(renderJob({ ...SAMPLE_JOB, budget: { min: 2000, max: 2000, currency: 'UAH', type: 'fixed', rateToUsd: 0.022 } })).toContain('Budget: 2000 UAH (fixed) (≈ $44 USD)')
+    expect(renderJob({ ...SAMPLE_JOB, budget: { currency: 'EUR', type: 'fixed' } })).toContain('Budget: ? EUR (fixed)')
+  })
   it('renderScore covers filtered, scored and unscored', () => {
     expect(renderScore({ status: 'filtered', filterReason: 'stale' })).toContain('reason: stale')
     expect(renderScore(SAMPLE_MATCH)).toContain('Score: 82/100 (strong)')

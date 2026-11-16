@@ -166,7 +166,7 @@
     "is_remote_job": false,
     "is_premium": false,
     "location": null,
-    "safe_type": null,
+    "safe_type": "company",
     "is_personal": false,
     "employer": {
      "id": 1002,
@@ -176,8 +176,8 @@
      "last_name": "Employer3",
      "self": "https://api.freelancehunt.com/v2/employers/1002",
      "company": {
-      "id": 22245,
-      "name": "Bimsoft"
+      "id": 2001,
+      "name": "Test Company"
      },
      "rating": 562,
      "completed_projects": 6,
