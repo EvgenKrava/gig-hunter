@@ -12,14 +12,22 @@ locals {
   table_arns    = [aws_dynamodb_table.main.arn, "${aws_dynamodb_table.main.arn}/index/*"]
   ssm_users_arn = "arn:aws:ssm:${var.region}:${local.account_id}:parameter${local.ssm_prefix}/users/*"
   ssm_auth_arn  = "arn:aws:ssm:${var.region}:${local.account_id}:parameter${local.ssm_prefix}/auth/*"
-  bedrock_arns = [
-    "arn:aws:bedrock:*::foundation-model/anthropic.*",
-    "arn:aws:bedrock:*:${local.account_id}:inference-profile/*anthropic*",
+  ddb_rw        = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:Query", "dynamodb:BatchGetItem"]
+
+  # Claude access for the poller and API. With `anthropic` each user's own Claude API key sits under /users/ (read by
+  # the poller, written by the API through the grants above), so nothing extra is needed; `bedrock` uses the Lambda role.
+  llm_statements = var.llm_provider == "anthropic" ? [] : [
+    {
+      actions = ["bedrock:InvokeModel"]
+      resources = [
+        "arn:aws:bedrock:*::foundation-model/anthropic.*",
+        "arn:aws:bedrock:*:${local.account_id}:inference-profile/*anthropic*",
+      ]
+    },
+    # Opus 4.7+ / Sonnet 5 / Opus 5.5 are served by the Mantle (Messages API) endpoint, which signs as `bedrock-mantle`
+    # and authorizes against the account's default project rather than a model ARN.
+    { actions = ["bedrock-mantle:CreateInference"], resources = ["arn:aws:bedrock-mantle:*:${local.account_id}:project/*"] },
   ]
-  # Opus 4.7+ / Sonnet 5+ / Haiku 5+ are served by the Mantle (Messages API) endpoint, which signs as `bedrock-mantle`
-  # and authorizes against the account's default project rather than a model ARN.
-  bedrock_mantle_arns = ["arn:aws:bedrock-mantle:*:${local.account_id}:project/*"]
-  ddb_rw              = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:Query", "dynamodb:BatchGetItem"]
 }
 
 data "aws_iam_policy_document" "poller" {
@@ -31,13 +39,12 @@ data "aws_iam_policy_document" "poller" {
     actions   = ["ssm:GetParameter"]
     resources = [local.ssm_users_arn]
   }
-  statement {
-    actions   = ["bedrock:InvokeModel"]
-    resources = local.bedrock_arns
-  }
-  statement {
-    actions   = ["bedrock-mantle:CreateInference"]
-    resources = local.bedrock_mantle_arns
+  dynamic "statement" {
+    for_each = local.llm_statements
+    content {
+      actions   = statement.value.actions
+      resources = statement.value.resources
+    }
   }
 }
 
@@ -51,13 +58,12 @@ data "aws_iam_policy_document" "api" {
     actions   = ["ssm:GetParameter", "ssm:PutParameter", "ssm:DeleteParameter"]
     resources = [local.ssm_users_arn]
   }
-  statement {
-    actions   = ["bedrock:InvokeModel"]
-    resources = local.bedrock_arns
-  }
-  statement {
-    actions   = ["bedrock-mantle:CreateInference"]
-    resources = local.bedrock_mantle_arns
+  dynamic "statement" {
+    for_each = local.llm_statements
+    content {
+      actions   = statement.value.actions
+      resources = statement.value.resources
+    }
   }
   statement {
     actions   = ["lambda:InvokeFunction"]

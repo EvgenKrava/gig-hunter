@@ -17,7 +17,7 @@ function Terms() {
       </section>
       <section>
         <h2>Your keys, your responsibility</h2>
-        <p>Notifications go through a Telegram bot token you create, and jobs are fetched with API tokens from the platforms you connect (for example Freelancer.com). By connecting a token you confirm you are allowed to use it this way under that platform's own terms, and you accept that GigHunter calls those services on your behalf with it. Remove a token at any time in Settings.</p>
+        <p>Jobs are scored with your own Claude API key, so Anthropic bills that usage to your Anthropic account. Notifications go through a Telegram bot token you create, and jobs are fetched with API tokens from the platforms you connect (for example Freelancer.com). By connecting a key or token you confirm you are allowed to use it this way under that service's own terms, and you accept that GigHunter calls those services on your behalf with it. Remove a key or token at any time in Settings.</p>
       </section>
       <section>
         <h2>Acceptable use</h2>

@@ -1,6 +1,6 @@
 import { DeleteParameterCommand, GetParameterCommand, ParameterNotFound, PutParameterCommand, SSMClient } from '@aws-sdk/client-ssm'
 
-export type UserSecretName = 'telegram/bot-token' | 'freelancer/token'
+export type UserSecretName = 'telegram/bot-token' | 'freelancer/token' | 'anthropic/api-key'
 
 export class Secrets {
   constructor(private readonly ssm: SSMClient, private readonly prefix = '/gighunter') {}

@@ -1,18 +1,32 @@
 import { z } from 'zod'
 import { IsoDate } from './common'
 
-// Haiku 5.5 is the intended default, but as of 2026-10-16 Bedrock answers it (and every 5.x model) with
-// 403 "not available for this account" — switch once AWS grants the account access.
-export const DEFAULT_MODEL = 'global.anthropic.claude-haiku-4-5-20251001-v1:0'
+// Settings hold Claude API model IDs whatever the LLM backend; the Bedrock client maps them to Bedrock IDs.
+// Note: as of 2026-10-19 Bedrock answers every 5.x model with 403 "not available for this account", so Haiku 5.5
+// works only through the direct Anthropic API (the default backend).
+export const DEFAULT_MODEL = 'claude-haiku-5-5'
 
 export const KNOWN_MODELS: { id: string; label: string }[] = [
-  { id: DEFAULT_MODEL, label: 'Claude Haiku 4.5 (fast, cheapest)' },
-  { id: 'global.anthropic.claude-haiku-5-5', label: 'Claude Haiku 5.5' },
-  { id: 'global.anthropic.claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
-  { id: 'global.anthropic.claude-sonnet-5-5', label: 'Claude Sonnet 5.5' },
-  { id: 'global.anthropic.claude-opus-4-6-v1', label: 'Claude Opus 4.6' },
-  { id: 'anthropic.claude-opus-5-5', label: 'Claude Opus 5.5' },
+  { id: DEFAULT_MODEL, label: 'Claude Haiku 5.5 (fast, cheapest)' },
+  { id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5' },
+  { id: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
+  { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5' },
+  { id: 'claude-opus-4-6', label: 'Claude Opus 4.6' },
+  { id: 'claude-opus-5-5', label: 'Claude Opus 5.5' },
 ]
+
+/**
+ * Normalizes a model ID to its Claude API form, so settings saved while Bedrock was the backend keep working:
+ * `global.anthropic.claude-haiku-4-5-20251001-v1:0` → `claude-haiku-4-5`, `anthropic.claude-opus-5-5` → `claude-opus-5-5`.
+ * A dated snapshot collapses to its alias only when the alias is a known model.
+ */
+export function canonicalModelId(id: string): string {
+  const bare = id.replace(/^(?:[a-z-]+\.)?anthropic\./, '').replace(/-v\d+(?::\d+)?$/, '')
+  const alias = bare.replace(/-\d{8}$/, '')
+  return alias !== bare && KNOWN_MODELS.some((m) => m.id === alias) ? alias : bare
+}
+
+const ModelId = z.string().min(1).max(120).transform(canonicalModelId)
 
 export const TelegramSettingsSchema = z.object({
   tokenSet: z.boolean().default(false),
@@ -21,6 +35,13 @@ export const TelegramSettingsSchema = z.object({
   webhookSecret: z.string().optional(),
   chatId: z.string().optional(),
   chatTitle: z.string().optional(),
+})
+
+/** The user's own Claude API key (kept in SSM); settings only record that it is set, its last 4 characters and when. */
+export const AnthropicSettingsSchema = z.object({
+  keySet: z.boolean().default(false),
+  keyHint: z.string().optional(),
+  keyUpdatedAt: IsoDate.optional(),
 })
 
 export const FreelancerSettingsSchema = z.object({
@@ -74,8 +95,9 @@ export const SettingsSchema = z.object({
   lastPolledAt: IsoDate.optional(),
   notifyThreshold: z.number().int().min(0).max(100).default(70),
   maxJobAgeHours: z.number().int().min(1).max(168).default(24),
-  model: z.string().min(1).default(DEFAULT_MODEL),
-  chatModel: z.string().min(1).default(DEFAULT_MODEL),
+  model: ModelId.default(DEFAULT_MODEL),
+  chatModel: ModelId.default(DEFAULT_MODEL),
+  anthropic: AnthropicSettingsSchema.prefault({}),
   telegram: TelegramSettingsSchema.prefault({}),
   platforms: z
     .object({
@@ -93,8 +115,8 @@ export const SettingsPatchSchema = z.strictObject({
   pollIntervalMinutes: z.number().int().min(15).max(1440).optional(),
   notifyThreshold: z.number().int().min(0).max(100).optional(),
   maxJobAgeHours: z.number().int().min(1).max(168).optional(),
-  model: z.string().min(1).max(120).optional(),
-  chatModel: z.string().min(1).max(120).optional(),
+  model: ModelId.optional(),
+  chatModel: ModelId.optional(),
   platforms: z
     .strictObject({
       freelancer: z.strictObject({ enabled: z.boolean().optional(), query: z.string().max(200).optional() }).optional(),

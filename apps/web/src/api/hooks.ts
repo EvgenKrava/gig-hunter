@@ -99,11 +99,11 @@ export function usePatchSettings() {
   const api = useApi(); const qc = useQueryClient()
   return useMutation({ mutationFn: (patch: SettingsPatch) => api.patch<PublicSettings>('/settings', patch), onSuccess: (s) => qc.setQueryData(['settings'], s) })
 }
-export function useSaveToken(kind: 'telegram' | 'freelancer') {
+export function useSaveToken(kind: 'telegram' | 'freelancer' | 'anthropic') {
   const api = useApi(); const qc = useQueryClient()
   return useMutation({ mutationFn: (token: string) => api.put<PublicSettings>(`/settings/${kind}/token`, { token }), onSuccess: (s) => qc.setQueryData(['settings'], s) })
 }
-export function useRemoveToken(kind: 'telegram' | 'freelancer') {
+export function useRemoveToken(kind: 'telegram' | 'freelancer' | 'anthropic') {
   const api = useApi(); const qc = useQueryClient()
   return useMutation({ mutationFn: () => api.del<PublicSettings>(`/settings/${kind}/token`), onSuccess: (s) => qc.setQueryData(['settings'], s) })
 }

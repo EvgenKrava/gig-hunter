@@ -16,7 +16,7 @@ function Privacy() {
           <li><strong>Identity</strong> — your Google email address and the identifier Google assigns to you, held in AWS Cognito. Sign-up is limited to an invitation list of email addresses.</li>
           <li><strong>Profile</strong> — the skills, budget, hours, languages, stop words and free text you enter.</li>
           <li><strong>Settings and prompt overrides</strong> — polling interval, thresholds, model choice, Telegram chat id, and any prompt text you customise.</li>
-          <li><strong>Connected tokens</strong> — your Telegram bot token and platform API tokens, encrypted at rest in AWS Systems Manager Parameter Store. They are used only to fetch jobs and send you messages.</li>
+          <li><strong>Connected keys and tokens</strong> — your Claude API key, Telegram bot token and platform API tokens, encrypted at rest in AWS Systems Manager Parameter Store. They are used only to score jobs, fetch jobs and send you messages, and are never shown again after you save them (Settings shows the last 4 characters).</li>
           <li><strong>Matched jobs, scores and feedback</strong> — kept for 60 days, then expire automatically.</li>
           <li><strong>Per-job chats</strong> — your messages and the model's replies, kept for 60 days.</li>
           <li><strong>Search runs</strong> — counts and errors per run, kept for 30 days.</li>
@@ -26,7 +26,7 @@ function Privacy() {
         <h2>Who processes it</h2>
         <ul>
           <li><strong>Amazon Web Services</strong> (us-east-1) hosts everything: Cognito, Lambda, DynamoDB, Parameter Store.</li>
-          <li><strong>Anthropic Claude via Amazon Bedrock</strong> receives your profile, job posts and chat messages to score jobs and draft proposals. Bedrock does not use this content to train models.</li>
+          <li><strong>Anthropic</strong> receives your profile, job posts and chat messages through the Claude API, called with your own API key, to score jobs and draft proposals. That use falls under your own agreement with Anthropic; under Anthropic’s commercial terms, API content is not used to train models.</li>
           <li><strong>Telegram</strong> delivers notifications through the bot you created, so Telegram sees the job messages and your replies to the bot.</li>
           <li><strong>Freelance platforms</strong> you connect (for example Freelancer.com) receive requests made with your own token.</li>
         </ul>

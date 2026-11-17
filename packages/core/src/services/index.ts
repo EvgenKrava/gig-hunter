@@ -1,5 +1,6 @@
 export * from './errors'
 export * from './telegramSetup'
 export * from './freelancerSetup'
+export * from './anthropicSetup'
 export * from './chatService'
 export * from './accountDeletion'

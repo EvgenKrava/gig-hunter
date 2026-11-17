@@ -4,6 +4,8 @@ import { runForUser, MAX_SCORED_PER_RUN, type PipelineDeps } from './runForUser'
 import { defaultSettings, type Job, type Match } from '../schema/index'
 import { SourceError } from '../adapters/index'
 import { createLogger } from '../logger'
+import { ApiKeyError } from '../llm/index'
+import Anthropic from '@anthropic-ai/sdk'
 
 const nowIso = '2026-09-20T12:00:00.000Z'
 const profile = { displayName: 'Yev', skills: [{ name: 'React', level: 'expert' as const }], budget: { min: 50, max: 500, currency: 'USD' as const }, maxHours: 6, languages: ['en'], stopWords: ['wordpress'], freeText: '', filters: defaultProfileFilters(), updatedAt: nowIso }
@@ -19,7 +21,7 @@ const job = (id: string, patch: Partial<Job> = {}): Job => ({
   budget: { min: 100, max: 200, currency: 'USD', type: 'fixed' }, skills: ['React'], postedAt: '2026-09-20T11:00:00.000Z', language: 'en', ...patch,
 })
 
-function makeDeps(opts: { settings?: ReturnType<typeof settings> | null; jobs?: Job[]; known?: string[]; pending?: Match[]; score?: number; scoreFails?: boolean; sendFails?: boolean; fetchError?: Error } = {}) {
+function makeDeps(opts: { settings?: ReturnType<typeof settings> | null; jobs?: Job[]; known?: string[]; pending?: Match[]; score?: number; scoreFails?: boolean; scoreError?: Error; sendFails?: boolean; fetchError?: Error; noLlmKey?: boolean } = {}) {
   const calls: string[] = []
   const store = {
     getProfile: vi.fn().mockResolvedValue(profile),
@@ -32,19 +34,24 @@ function makeDeps(opts: { settings?: ReturnType<typeof settings> | null; jobs?: 
     putRun: vi.fn().mockResolvedValue(undefined),
     touchLastPolled: vi.fn().mockResolvedValue(undefined),
   }
-  const secrets = { getUserSecret: vi.fn().mockImplementation(async (_u: string, name: string) => (name === 'telegram/bot-token' ? 'bot' : 'fl-token')) }
+  const secrets = { getUserSecret: vi.fn().mockImplementation(async (_u: string, name: string) => (name === 'telegram/bot-token' ? 'bot' : name === 'anthropic/api-key' ? 'sk-ant-api03-k' : 'fl-token')) }
   const fetchRecent = vi.fn().mockImplementation(async () => { calls.push('fetch'); if (opts.fetchError) throw opts.fetchError; return opts.jobs ?? [] })
   const sources = { freelancer: { platform: 'freelancer', fetchRecent, verifyToken: vi.fn() }, upwork: { platform: 'upwork', fetchRecent: vi.fn().mockResolvedValue([]), verifyToken: vi.fn() }, freelancehunt: { platform: 'freelancehunt', fetchRecent, verifyToken: vi.fn() } }
   const parse = vi.fn().mockImplementation(async () => {
+    if (opts.scoreError) throw opts.scoreError
     if (opts.scoreFails) throw new Error('bedrock throttled')
     return { parsed_output: { score: opts.score ?? 85, reasoning: 'fits', estimatedHours: 2, risks: [] }, usage: { input_tokens: 100, output_tokens: 20, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 }, stop_reason: 'end_turn' }
   })
   const sendMessage = vi.fn().mockImplementation(async () => { calls.push('send'); if (opts.sendFails) throw new Error('tg down'); return { messageId: 99 } })
+  const createLlm = vi.fn().mockImplementation(() => {
+    if (opts.noLlmKey) throw new ApiKeyError('Claude API key is not set')
+    return { messages: { create: vi.fn(), parse } }
+  })
   const deps = {
-    store, secrets, sources, createLlm: () => ({ messages: { create: vi.fn(), parse } }), createTelegram: () => ({ sendMessage }),
+    store, secrets, sources, createLlm, createTelegram: () => ({ sendMessage }),
     appUrl: 'https://app', now: () => new Date(nowIso), log: createLogger({}, () => {}),
   } as unknown as PipelineDeps
-  return { deps, store, calls, sendMessage, parse, fetchRecent }
+  return { deps, store, secrets, calls, sendMessage, parse, fetchRecent, createLlm }
 }
 
 describe('runForUser', () => {
@@ -56,6 +63,32 @@ describe('runForUser', () => {
     expect(fetchRecent).not.toHaveBeenCalled()
     expect(store.putRun).toHaveBeenCalledWith('u1', expect.objectContaining({ finishedAt: nowIso, trigger: 'schedule' }))
     expect(store.touchLastPolled).toHaveBeenCalledWith('u1', nowIso)
+  })
+
+  it('creates the scoring client with the user’s own Claude API key', async () => {
+    const s = settings(); s.anthropic = { keySet: true, keyHint: '-k' }
+    const { deps, secrets, createLlm } = makeDeps({ settings: s, jobs: [job('good')] })
+    await runForUser(deps, 'u1', 'manual')
+    expect(secrets.getUserSecret).toHaveBeenCalledWith('u1', 'anthropic/api-key')
+    expect(createLlm).toHaveBeenCalledWith(s.model, 'sk-ant-api03-k')
+  })
+
+  it('records claude_key_missing and fetches nothing when the backend needs a key the user has not set', async () => {
+    const { deps, secrets, fetchRecent, createLlm } = makeDeps({ noLlmKey: true, jobs: [job('good')] })
+    const run = await runForUser(deps, 'u1', 'schedule')
+    expect(run.errors).toEqual(['claude_key_missing'])
+    expect(createLlm).toHaveBeenCalledWith(expect.any(String), null)
+    expect(secrets.getUserSecret).not.toHaveBeenCalledWith('u1', 'anthropic/api-key')
+    expect(fetchRecent).not.toHaveBeenCalled()
+  })
+
+  it('stops scoring at the first key rejection and leaves the jobs for the next run', async () => {
+    const rejected = new Anthropic.AuthenticationError(401, undefined, 'invalid x-api-key', new Headers())
+    const { deps, calls, parse } = makeDeps({ jobs: [job('a'), job('b')], scoreError: rejected })
+    const run = await runForUser(deps, 'u1', 'manual')
+    expect(run.errors).toEqual(['claude_key_rejected'])
+    expect(parse).toHaveBeenCalledTimes(1)
+    expect(calls).toEqual(['fetch'])
   })
 
   it('dedups, filters, scores, notifies and accounts usage', async () => {
