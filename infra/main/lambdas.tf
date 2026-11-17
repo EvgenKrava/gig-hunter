@@ -26,9 +26,10 @@ resource "aws_lambda_function" "poller" {
   memory_size = 512
   environment {
     variables = {
-      TABLE_NAME = aws_dynamodb_table.main.name
-      SSM_PREFIX = local.ssm_prefix
-      APP_URL    = local.app_url
+      TABLE_NAME   = aws_dynamodb_table.main.name
+      SSM_PREFIX   = local.ssm_prefix
+      APP_URL      = local.app_url
+      LLM_PROVIDER = var.llm_provider
     }
   }
   depends_on = [aws_cloudwatch_log_group.fn]
@@ -51,6 +52,7 @@ resource "aws_lambda_function" "api" {
       API_BASE_URL         = aws_apigatewayv2_api.main.api_endpoint
       POLLER_FUNCTION_NAME = "${var.project}-poller"
       USER_POOL_ID         = aws_cognito_user_pool.main.id
+      LLM_PROVIDER         = var.llm_provider
     }
   }
   depends_on = [aws_cloudwatch_log_group.fn]
