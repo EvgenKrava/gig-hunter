@@ -44,22 +44,17 @@ terraform apply
 
 Confirm the SNS subscription email after the first apply. ACM validation can take a few minutes.
 
-## Claude API key
+## Claude backend
 
-The Lambdas call Claude through the Claude API (`llm_provider = "anthropic"`, the default). They read a Claude Console API key (`sk-ant-api…`, from platform.claude.com → API Keys) from the SSM SecureString `/gighunter/llm/anthropic-api-key`. Terraform creates the parameter with a placeholder, through a write-only attribute, so the key never lands in code, tfvars or state. After the first apply, store the real key without echoing it or leaving it in shell history:
+By default (`llm_provider = "anthropic"`) the Lambdas call Claude through the Claude API with **each user's own Claude API key**.
+- **Where the key comes from:** users paste a Claude Console key (`sk-ant-api…`) under Settings → Claude API key. The API checks it with Anthropic (a free models call) before saving.
+- **Where it is stored:** the SSM SecureString `/gighunter/users/<sub>/anthropic/api-key`, next to the user's other tokens. The Lambdas already read and write `/gighunter/users/*`, so no extra grants are needed. The key is never returned by the API: Settings shows only the last 4 characters and when the key was saved. A new key takes effect on the next run, with no deploy.
+- **Billing:** usage is billed to each user's Anthropic account. Claude Haiku 5.5, the default model, costs $0.10 / $0.50 per million input / output tokens. A user without a key gets runs that record `claude_key_missing` and score nothing.
+- **Subscriptions:** Claude Pro/Max subscription tokens (`sk-ant-oat…`) are refused, because they may not power a deployed app.
 
-```bash
-read -rs KEY && aws ssm put-parameter --profile yevhenii --region us-east-1 \
-  --name /gighunter/llm/anthropic-api-key --type SecureString --overwrite --value "$KEY"; unset KEY
-```
+To go back to Bedrock, apply with `-var llm_provider=bedrock`. That gives the poller and API Lambdas the Bedrock grants and sets `LLM_PROVIDER=bedrock`; user keys are then ignored. The account gets 403 on every Claude 5.x model on Bedrock, so pick a 4.x model in Settings first.
 
-The Lambdas cache the key per container. A rotated key takes effect on the next cold start, or right away after any deploy. A Claude Pro/Max subscription token (`sk-ant-oat…`) is refused: those may not power a deployed app.
-
-Usage is billed per token by Anthropic: Claude Haiku 5.5 (the default model) costs $0.10 / $0.50 per million input / output tokens. The parameter itself is free: Standard tier, encrypted with the AWS-managed `aws/ssm` key.
-
-To go back to Bedrock, apply with `-var llm_provider=bedrock`. That swaps the Lambdas' SSM-key grant for the Bedrock grants and sets `LLM_PROVIDER=bedrock`. Note that the account gets 403 on every Claude 5.x model on Bedrock, so pick a 4.x model in Settings first.
-
-For local runs (`pnpm poller:local`, `pnpm llm:smoke`), `ANTHROPIC_API_KEY` in the environment takes precedence over SSM.
+For a local check of a key, run `pnpm llm:smoke` with `ANTHROPIC_API_KEY` set.
 
 ## Deploying changes
 

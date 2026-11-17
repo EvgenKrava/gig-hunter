@@ -14,12 +14,9 @@ locals {
   ssm_auth_arn  = "arn:aws:ssm:${var.region}:${local.account_id}:parameter${local.ssm_prefix}/auth/*"
   ddb_rw        = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:Query", "dynamodb:BatchGetItem"]
 
-  # Claude access for the poller and API, granted only for the selected var.llm_provider.
-  llm_statements = var.llm_provider == "anthropic" ? [
-    # The Claude API key. No kms:Decrypt grant: the parameter uses the AWS-managed aws/ssm key, whose key policy lets
-    # account principals decrypt through SSM (the per-user SecureStrings under /users/ work the same way).
-    { actions = ["ssm:GetParameter"], resources = [aws_ssm_parameter.anthropic_api_key.arn] },
-    ] : [
+  # Claude access for the poller and API. With `anthropic` each user's own Claude API key sits under /users/ (read by
+  # the poller, written by the API through the grants above), so nothing extra is needed; `bedrock` uses the Lambda role.
+  llm_statements = var.llm_provider == "anthropic" ? [] : [
     {
       actions = ["bedrock:InvokeModel"]
       resources = [
