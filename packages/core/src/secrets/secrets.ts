@@ -35,6 +35,15 @@ export class Secrets {
     }
   }
 
+  /** SSM SecureString holding the Claude Console API key; Terraform creates it with a placeholder. */
+  get anthropicApiKeyParamName(): string {
+    return `${this.prefix}/llm/anthropic-api-key`
+  }
+
+  getAnthropicApiKey(): Promise<string | null> {
+    return this.get(this.anthropicApiKeyParamName)
+  }
+
   async getAllowedEmails(): Promise<string[]> {
     const raw = (await this.get(`${this.prefix}/auth/allowed-emails`)) ?? ''
     return raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)

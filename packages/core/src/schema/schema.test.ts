@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  ProfileInputSchema, SettingsSchema, SettingsPatchSchema, defaultSettings, DEFAULT_MODEL,
+  ProfileInputSchema, SettingsSchema, SettingsPatchSchema, defaultSettings, DEFAULT_MODEL, KNOWN_MODELS, canonicalModelId,
   PromptsPatchSchema, JobSchema, MatchSchema, ScoreResultSchema, FREELANCEHUNT_SKILLS,
 } from './index'
 
@@ -49,6 +49,31 @@ describe('SettingsSchema', () => {
     expect(SettingsPatchSchema.safeParse({ platforms: { freelancehunt: { enabled: true } } }).success).toBe(true)
     expect(SettingsPatchSchema.safeParse({ platforms: { freelancehunt: { token: 'x' } } }).success).toBe(false)
     expect(SettingsPatchSchema.safeParse({ platforms: { freelancehunt: { skillIds: [1.5] } } }).success).toBe(false)
+  })
+  it('defaults to Claude Haiku 5.5', () => {
+    expect(DEFAULT_MODEL).toBe('claude-haiku-5-5')
+    expect(KNOWN_MODELS.map((m) => m.id)).toContain(DEFAULT_MODEL)
+  })
+  it('normalizes model IDs saved in Bedrock form when reading stored settings and patches', () => {
+    const s = SettingsSchema.parse({ updatedAt: now, model: 'global.anthropic.claude-haiku-4-5-20251001-v1:0', chatModel: 'anthropic.claude-opus-5-5' })
+    expect(s.model).toBe('claude-haiku-4-5')
+    expect(s.chatModel).toBe('claude-opus-5-5')
+    expect(SettingsPatchSchema.parse({ model: 'global.anthropic.claude-opus-4-6-v1' })).toEqual({ model: 'claude-opus-4-6' })
+  })
+  it.each([
+    ['global.anthropic.claude-haiku-4-5-20251001-v1:0', 'claude-haiku-4-5'],
+    ['global.anthropic.claude-haiku-5-5', 'claude-haiku-5-5'],
+    ['global.anthropic.claude-sonnet-4-6', 'claude-sonnet-4-6'],
+    ['global.anthropic.claude-sonnet-5-5', 'claude-sonnet-5-5'],
+    ['global.anthropic.claude-opus-4-6-v1', 'claude-opus-4-6'],
+    ['us.anthropic.claude-sonnet-4-6', 'claude-sonnet-4-6'],
+    ['anthropic.claude-sonnet-5', 'claude-sonnet-5'],
+    ['claude-haiku-5-5', 'claude-haiku-5-5'],
+    ['claude-haiku-4-5-20251001', 'claude-haiku-4-5'],
+    // An unknown dated snapshot keeps its date: the bare name may not be an alias.
+    ['claude-sonnet-4-5-20250929', 'claude-sonnet-4-5-20250929'],
+  ])('canonicalModelId(%s) → %s', (id, canonical) => {
+    expect(canonicalModelId(id)).toBe(canonical)
   })
   it('FREELANCEHUNT_SKILLS lists unique ids including the defaults', () => {
     const ids = FREELANCEHUNT_SKILLS.map((s) => s.id)
