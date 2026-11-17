@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { usePatchSettings, useSettings } from '../api/hooks'
 import { useToast } from '../components/Toast'
 import { FormCardSkeleton, SkeletonPage } from '../components/ui/Skeleton'
+import { ClaudeBlock } from '../features/settings/ClaudeBlock'
 import { CostControls } from '../features/settings/CostControls'
 import { FreelancehuntBlock } from '../features/settings/FreelancehuntBlock'
 import { FreelancerBlock } from '../features/settings/FreelancerBlock'
@@ -27,6 +28,7 @@ function SettingsPage() {
           : <SkeletonPage className="space-y-4">{[2, 2, 2].map((n, i) => <FormCardSkeleton key={i} fields={n} />)}</SkeletonPage>
       ) : (<>
         <CostControls settings={s} onPatch={onPatch} />
+        <ClaudeBlock settings={s} />
         <TelegramBlock settings={s} onPatch={onPatch} />
         <FreelancerBlock settings={s} onPatch={onPatch} />
         <FreelancehuntBlock settings={s} onPatch={onPatch} />

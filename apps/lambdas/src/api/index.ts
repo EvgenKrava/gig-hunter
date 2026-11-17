@@ -1,5 +1,6 @@
 import { AdminDeleteUserCommand, CognitoIdentityProviderClient, ListUsersCommand, UserNotFoundException } from '@aws-sdk/client-cognito-identity-provider'
 import { InvokeCommand, LambdaClient } from '@aws-sdk/client-lambda'
+import { verifyApiKey } from '@gighunter/core/llm'
 import { handle } from 'hono/aws-lambda'
 import { buildCoreDeps, env } from '../shared/deps'
 import { createApp } from './app'
@@ -13,6 +14,7 @@ const cognito = new CognitoIdentityProviderClient({ region })
 const deps: ApiDeps = {
   ...core,
   apiBaseUrl: env('API_BASE_URL'),
+  verifyLlmKey: (apiKey) => verifyApiKey(apiKey),
   invokePoller: async (userId) => {
     await lambda.send(
       new InvokeCommand({

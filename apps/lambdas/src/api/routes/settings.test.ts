@@ -83,3 +83,50 @@ describe('/settings/freelancer/token', () => {
     expect(deps.secrets.deleteUserSecret).toHaveBeenCalledWith('s', 'freelancer/token')
   })
 })
+
+describe('/settings/anthropic/token', () => {
+  const KEY = 'sk-ant-api03-very-secret-9xyz'
+
+  it('PUT verifies, stores the key per user and never returns it', async () => {
+    const deps = makeApiDeps()
+    const res = await createApp(deps).request('/settings/anthropic/token', json({ token: KEY }, 'PUT'), authed('s'))
+    expect(res.status).toBe(200)
+    const text = await res.text()
+    expect(text).not.toContain(KEY)
+    expect(JSON.parse(text).anthropic).toEqual({ keySet: true, keyHint: '9xyz', keyUpdatedAt: '2026-09-20T10:00:00.000Z' })
+    expect(deps.verifyLlmKey).toHaveBeenCalledWith(KEY)
+    expect(deps.secrets.putUserSecret).toHaveBeenCalledWith('s', 'anthropic/api-key', KEY)
+
+    // GET afterwards exposes only the hint as well.
+    const stored = vi.mocked(deps.store.putSettings).mock.calls[0]![1]
+    const after = makeApiDeps({ store: { getSettings: vi.fn().mockResolvedValue(stored) } })
+    const got = await (await createApp(after).request('/settings', {}, authed('s'))).text()
+    expect(got).not.toContain(KEY)
+    expect(JSON.parse(got).anthropic.keySet).toBe(true)
+  })
+
+  it('PUT rejects a key Anthropic refuses with 400, stores nothing and does not echo the key', async () => {
+    const deps = makeApiDeps({ verifyLlmKey: vi.fn().mockResolvedValue({ ok: false, error: 'Anthropic rejected the key (wrong, disabled or deleted)' }) })
+    const res = await createApp(deps).request('/settings/anthropic/token', json({ token: KEY }, 'PUT'), authed())
+    expect(res.status).toBe(400)
+    const text = await res.text()
+    expect(JSON.parse(text)).toMatchObject({ code: 'invalid_key' })
+    expect(text).not.toContain(KEY)
+    expect(deps.secrets.putUserSecret).not.toHaveBeenCalled()
+  })
+
+  it('PUT answers 502 when Anthropic cannot be reached to check the key', async () => {
+    const deps = makeApiDeps({ verifyLlmKey: vi.fn().mockRejectedValue(new Error('ECONNRESET')) })
+    const res = await createApp(deps).request('/settings/anthropic/token', json({ token: KEY }, 'PUT'), authed())
+    expect(res.status).toBe(502)
+    expect(deps.secrets.putUserSecret).not.toHaveBeenCalled()
+  })
+
+  it('DELETE removes the key and clears the hint', async () => {
+    const deps = makeApiDeps()
+    const res = await createApp(deps).request('/settings/anthropic/token', { method: 'DELETE' }, authed('s'))
+    expect(res.status).toBe(200)
+    expect((await parse(res)).anthropic).toEqual({ keySet: false })
+    expect(deps.secrets.deleteUserSecret).toHaveBeenCalledWith('s', 'anthropic/api-key')
+  })
+})

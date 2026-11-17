@@ -22,6 +22,7 @@ export function makeApiDeps(overrides: Partial<Record<keyof ApiDeps, unknown>> &
     now: () => new Date('2026-09-20T10:00:00.000Z'),
     log: createLogger({}, () => {}),
     apiBaseUrl: 'https://api.test',
+    verifyLlmKey: vi.fn().mockResolvedValue({ ok: true }),
     invokePoller: vi.fn().mockResolvedValue(undefined),
     deleteIdentity: vi.fn().mockResolvedValue(undefined),
     ...(rest as Partial<ApiDeps>),

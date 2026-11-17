@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { defaultSettings, SettingsPatchSchema, type Settings } from '@gighunter/core/schema'
-import { connectFreelancer, connectTelegramBot, disconnectFreelancer, disconnectTelegramBot, sendTelegramTest } from '@gighunter/core/services'
+import { connectAnthropic, connectFreelancer, connectTelegramBot, disconnectAnthropic, disconnectFreelancer, disconnectTelegramBot, sendTelegramTest } from '@gighunter/core/services'
 import type { ApiEnv } from '../auth'
 import type { ApiDeps } from '../deps'
 
@@ -53,6 +53,13 @@ export function settingsRoutes(deps: ApiDeps) {
     return c.json(maskSettings(await connectFreelancer(deps, c.get('user').sub, token)))
   })
   r.delete('/settings/freelancer/token', async (c) => c.json(maskSettings(await disconnectFreelancer(deps, c.get('user').sub))))
+
+  // The user's own Claude API key. Write-only: responses carry settings.anthropic (set / last 4 / updated), never the key.
+  r.put('/settings/anthropic/token', async (c) => {
+    const { token } = TokenBody.parse(await c.req.json())
+    return c.json(maskSettings(await connectAnthropic(deps, c.get('user').sub, token)))
+  })
+  r.delete('/settings/anthropic/token', async (c) => c.json(maskSettings(await disconnectAnthropic(deps, c.get('user').sub))))
 
   return r
 }

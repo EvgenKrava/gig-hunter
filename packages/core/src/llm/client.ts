@@ -18,7 +18,13 @@ export interface LlmClient {
   }
 }
 
-/** Which backend serves Claude. `anthropic` (the Claude API with a Console API key) is the default. */
+/**
+ * Builds the client for one request or run. `apiKey` is the user's own Claude API key: the `anthropic` backend requires
+ * it (and throws ApiKeyError without it); the `bedrock` backend ignores it.
+ */
+export type CreateLlm = (model: string, apiKey: string | null) => LlmClient
+
+/** Which backend serves Claude. `anthropic` (the Claude API with each user's own Console API key) is the default. */
 export type LlmProvider = 'anthropic' | 'bedrock'
 
 export function parseLlmProvider(value: string | undefined): LlmProvider {

@@ -25,6 +25,7 @@ export async function deleteAccount(deps: AccountDeletionDeps, userId: string): 
   }
   await deps.secrets.deleteUserSecret(userId, 'telegram/bot-token')
   await deps.secrets.deleteUserSecret(userId, 'freelancer/token')
+  await deps.secrets.deleteUserSecret(userId, 'anthropic/api-key')
   await deps.store.deleteUser(userId)
   await deps.deleteIdentity(userId)
 }

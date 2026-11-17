@@ -2,9 +2,6 @@ import Anthropic from '@anthropic-ai/sdk'
 import { canonicalModelId } from '../schema/index'
 import { mapModelIds, type LlmClient } from './client'
 
-/** Where the key comes from (env for local runs, SSM in Lambda). Called once; a failed lookup is retried on the next request. */
-export type ApiKeySource = () => Promise<string | null>
-
 export class ApiKeyError extends Error {
   constructor(message: string) {
     super(message)
@@ -15,11 +12,11 @@ export class ApiKeyError extends Error {
 /** Accepts only Claude Console API keys; a Claude Pro/Max subscription token may not power a deployed app. */
 export function assertApiKey(key: string | null | undefined): string {
   const k = key?.trim()
-  if (!k) throw new ApiKeyError('Anthropic API key is not set')
+  if (!k) throw new ApiKeyError('Claude API key is not set')
   if (k.startsWith('sk-ant-oat')) {
-    throw new ApiKeyError('This is a Claude subscription (OAuth) token, not an API key; create a key in the Claude Console')
+    throw new ApiKeyError('this is a Claude subscription (Pro/Max) token, not an API key; create an API key in the Claude Console')
   }
-  if (!k.startsWith('sk-ant-')) throw new ApiKeyError('Anthropic API key is not set (the stored value is not an sk-ant- key)')
+  if (!k.startsWith('sk-ant-')) throw new ApiKeyError('this does not look like a Claude API key (they start with sk-ant-)')
   return k
 }
 
@@ -33,24 +30,37 @@ export function anthropicSdkClient(apiKey: string): Anthropic {
   return new Anthropic({ apiKey, authToken: null, baseURL: ANTHROPIC_API_URL })
 }
 
+type NewSdk = (apiKey: string) => Anthropic
+
+/** Claude through the Claude API (no Bedrock) with the user's own key. Throws ApiKeyError when the key is missing or unusable. */
+export function createAnthropicClient(apiKey: string | null | undefined, newSdk: NewSdk = anthropicSdkClient): LlmClient {
+  return mapModelIds(newSdk(assertApiKey(apiKey)) as unknown as LlmClient, canonicalModelId)
+}
+
+export type ApiKeyCheck = { ok: true } | { ok: false; error: string }
+
 /**
- * Claude through the Claude API (no Bedrock). The key is fetched on the first request rather than at construction,
- * so building Lambda deps stays synchronous and a cold start that never calls Claude never reads the key.
+ * Checks a key before it is saved with a free call (list one model). A rejected key is `{ ok: false }`; anything else
+ * (network, rate limit, Anthropic outage) throws, since it says nothing about the key. Messages never include the key.
  */
-export function createAnthropicClient(getApiKey: ApiKeySource, newSdk: (apiKey: string) => unknown = anthropicSdkClient): LlmClient {
-  let sdk: Promise<LlmClient> | undefined
-  const ready = (): Promise<LlmClient> =>
-    (sdk ??= getApiKey()
-      .then((key) => newSdk(assertApiKey(key)) as LlmClient)
-      .catch((e: unknown) => {
-        sdk = undefined
-        throw e
-      }))
-  const lazy: LlmClient = {
-    messages: {
-      create: async (params) => (await ready()).messages.create(params),
-      parse: async <T>(params: Record<string, unknown>) => (await ready()).messages.parse<T>(params),
-    },
+export async function verifyApiKey(apiKey: string, newSdk: NewSdk = anthropicSdkClient): Promise<ApiKeyCheck> {
+  let key: string
+  try {
+    key = assertApiKey(apiKey)
+  } catch (e) {
+    return { ok: false, error: (e as Error).message }
   }
-  return mapModelIds(lazy, canonicalModelId)
+  try {
+    await newSdk(key).models.list({ limit: 1 })
+    return { ok: true }
+  } catch (e) {
+    if (e instanceof Anthropic.AuthenticationError) return { ok: false, error: 'Anthropic rejected the key (wrong, disabled or deleted)' }
+    if (e instanceof Anthropic.PermissionDeniedError) return { ok: false, error: 'the key is not allowed to call the Claude API' }
+    throw e
+  }
+}
+
+/** True when the Claude API refused the request because of the key itself; retrying with the same key is pointless. */
+export function isApiKeyRejected(e: unknown): boolean {
+  return e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError
 }

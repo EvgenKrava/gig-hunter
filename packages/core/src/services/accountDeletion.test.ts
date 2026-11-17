@@ -21,7 +21,7 @@ describe('deleteAccount', () => {
     const { deps, calls } = makeDeps()
     await deleteAccount(deps, 'u1')
     expect(deps.createTelegram).toHaveBeenCalledWith('bot-token')
-    expect(calls).toEqual(['telegram.deleteWebhook', 'secrets.delete:telegram/bot-token', 'secrets.delete:freelancer/token', 'store.deleteUser', 'deleteIdentity'])
+    expect(calls).toEqual(['telegram.deleteWebhook', 'secrets.delete:telegram/bot-token', 'secrets.delete:freelancer/token', 'secrets.delete:anthropic/api-key', 'store.deleteUser', 'deleteIdentity'])
     expect(deps.deleteIdentity).toHaveBeenCalledWith('u1')
     expect(deps.store.deleteUser).toHaveBeenCalledWith('u1')
   })
@@ -29,7 +29,7 @@ describe('deleteAccount', () => {
     const { deps, calls } = makeDeps({ token: null })
     await deleteAccount(deps, 'u1')
     expect(deps.createTelegram).not.toHaveBeenCalled()
-    expect(calls).toEqual(['secrets.delete:telegram/bot-token', 'secrets.delete:freelancer/token', 'store.deleteUser', 'deleteIdentity'])
+    expect(calls).toEqual(['secrets.delete:telegram/bot-token', 'secrets.delete:freelancer/token', 'secrets.delete:anthropic/api-key', 'store.deleteUser', 'deleteIdentity'])
   })
   it('ignores a failing deleteWebhook (the token may already be revoked) and still finishes', async () => {
     const { deps, calls } = makeDeps({ webhookFails: true })

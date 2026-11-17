@@ -37,6 +37,13 @@ export const TelegramSettingsSchema = z.object({
   chatTitle: z.string().optional(),
 })
 
+/** The user's own Claude API key (kept in SSM); settings only record that it is set, its last 4 characters and when. */
+export const AnthropicSettingsSchema = z.object({
+  keySet: z.boolean().default(false),
+  keyHint: z.string().optional(),
+  keyUpdatedAt: IsoDate.optional(),
+})
+
 export const FreelancerSettingsSchema = z.object({
   enabled: z.boolean().default(false),
   query: z.string().max(200).default(''),
@@ -90,6 +97,7 @@ export const SettingsSchema = z.object({
   maxJobAgeHours: z.number().int().min(1).max(168).default(24),
   model: ModelId.default(DEFAULT_MODEL),
   chatModel: ModelId.default(DEFAULT_MODEL),
+  anthropic: AnthropicSettingsSchema.prefault({}),
   telegram: TelegramSettingsSchema.prefault({}),
   platforms: z
     .object({

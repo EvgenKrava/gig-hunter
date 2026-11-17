@@ -33,10 +33,8 @@ describe('Secrets', () => {
     ssm.on(DeleteParameterCommand).rejectsOnce(new ParameterNotFound({ message: 'nope', $metadata: {} }))
     await expect(secrets.deleteUserSecret('u1', 'telegram/bot-token')).resolves.toBeUndefined()
   })
-  it('getAnthropicApiKey reads the decrypted key under the prefix', async () => {
-    ssm.on(GetParameterCommand).resolvesOnce({ Parameter: { Value: 'sk-ant-api03-x' } })
-    expect(await secrets.getAnthropicApiKey()).toBe('sk-ant-api03-x')
-    expect(ssm.commandCalls(GetParameterCommand)[0]!.args[0].input).toEqual({ Name: '/gighunter/llm/anthropic-api-key', WithDecryption: true })
+  it('keeps each user’s Claude API key under their own prefix', () => {
+    expect(secrets.userParamName('u1', 'anthropic/api-key')).toBe('/gighunter/users/u1/anthropic/api-key')
   })
   it('getAllowedEmails splits, trims and lowercases', async () => {
     ssm.on(GetParameterCommand).resolvesOnce({ Parameter: { Value: ' A@x.com, b@y.com ,' } }).rejectsOnce(new ParameterNotFound({ message: 'nope', $metadata: {} }))

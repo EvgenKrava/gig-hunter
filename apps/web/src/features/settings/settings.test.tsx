@@ -6,6 +6,7 @@ import { RouterContextProvider } from '@tanstack/react-router'
 import { defaultSettings } from '@gighunter/core/schema'
 import { renderWithProviders, setAuth, mockAuth } from '../../test/utils'
 import { ToastProvider } from '../../components/Toast'
+import { ClaudeBlock } from './ClaudeBlock'
 import { CostControls } from './CostControls'
 import { TelegramBlock } from './TelegramBlock'
 import { FreelancerBlock } from './FreelancerBlock'
@@ -23,6 +24,48 @@ describe('CostControls', () => {
     expect(onPatch).toHaveBeenCalledWith({ active: true })
     await userEvent.selectOptions(screen.getByLabelText(/poll every/i), '60')
     expect(onPatch).toHaveBeenCalledWith({ pollIntervalMinutes: 60 })
+  })
+})
+
+describe('ClaudeBlock', () => {
+  beforeEach(() => setAuth(mockAuth()))
+  it('saves a key via PUT /settings/anthropic/token and shows only the hint afterwards', async () => {
+    const saved = { ...base(), anthropic: { keySet: true, keyHint: 'wxyz', keyUpdatedAt: '2026-11-17T10:00:00.000Z' } }
+    const fetchFn = vi.spyOn(globalThis, 'fetch').mockResolvedValue(json(200, saved))
+    renderWithProviders(<ClaudeBlock settings={base()} />)
+    await userEvent.type(screen.getByLabelText('Claude API key'), 'sk-ant-api03-secret-wxyz')
+    await userEvent.click(screen.getByRole('button', { name: /save key/i }))
+    await waitFor(() => expect(fetchFn).toHaveBeenCalled())
+    expect(String(fetchFn.mock.calls[0]![0])).toBe('https://api.test/settings/anthropic/token')
+    expect((fetchFn.mock.calls[0]![1] as RequestInit).method).toBe('PUT')
+    expect(JSON.parse(String((fetchFn.mock.calls[0]![1] as RequestInit).body))).toEqual({ token: 'sk-ant-api03-secret-wxyz' })
+    fetchFn.mockRestore()
+  })
+  it('when set: shows the last 4 and save time, replaces without removing first', async () => {
+    const s: PublicSettings = { ...base(), anthropic: { keySet: true, keyHint: 'wxyz', keyUpdatedAt: '2026-11-17T10:00:00.000Z' } }
+    const fetchFn = vi.spyOn(globalThis, 'fetch').mockResolvedValue(json(200, s))
+    renderWithProviders(<ClaudeBlock settings={s} />)
+    expect(screen.getByText(/···wxyz/)).toBeInTheDocument()
+    expect(screen.getByText(/^Saved /)).toBeInTheDocument()
+    expect(screen.queryByLabelText('Claude API key')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /replace/i }))
+    await userEvent.type(screen.getByLabelText('Claude API key'), 'sk-ant-api03-new-key-1234')
+    await userEvent.click(screen.getByRole('button', { name: /save key/i }))
+    await waitFor(() => expect(fetchFn).toHaveBeenCalledTimes(1))
+    expect((fetchFn.mock.calls[0]![1] as RequestInit).method).toBe('PUT')
+    fetchFn.mockRestore()
+  })
+  it('shows the API error when the key is rejected', async () => {
+    const fetchFn = vi.spyOn(globalThis, 'fetch').mockResolvedValue(json(400, { error: 'Claude API key not saved: Anthropic rejected the key (wrong, disabled or deleted)', code: 'invalid_key' }))
+    renderWithProviders(<ClaudeBlock settings={base()} />)
+    await userEvent.type(screen.getByLabelText('Claude API key'), 'sk-ant-api03-bad-key-0000')
+    await userEvent.click(screen.getByRole('button', { name: /save key/i }))
+    expect(await screen.findByText(/Anthropic rejected the key/)).toBeInTheDocument()
+    fetchFn.mockRestore()
+  })
+  it('warns that scoring is paused when search is on and no key is set', () => {
+    renderWithProviders(<ClaudeBlock settings={{ ...base(), active: true }} />)
+    expect(screen.getByRole('status')).toHaveTextContent(/paused until you add a key/i)
   })
 })
 

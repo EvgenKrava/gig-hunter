@@ -1,6 +1,6 @@
 import { DeleteParameterCommand, GetParameterCommand, ParameterNotFound, PutParameterCommand, SSMClient } from '@aws-sdk/client-ssm'
 
-export type UserSecretName = 'telegram/bot-token' | 'freelancer/token'
+export type UserSecretName = 'telegram/bot-token' | 'freelancer/token' | 'anthropic/api-key'
 
 export class Secrets {
   constructor(private readonly ssm: SSMClient, private readonly prefix = '/gighunter') {}
@@ -33,15 +33,6 @@ export class Secrets {
     } catch (e) {
       if (!(e instanceof ParameterNotFound)) throw e
     }
-  }
-
-  /** SSM SecureString holding the Claude Console API key; Terraform creates it with a placeholder. */
-  get anthropicApiKeyParamName(): string {
-    return `${this.prefix}/llm/anthropic-api-key`
-  }
-
-  getAnthropicApiKey(): Promise<string | null> {
-    return this.get(this.anthropicApiKeyParamName)
   }
 
   async getAllowedEmails(): Promise<string[]> {

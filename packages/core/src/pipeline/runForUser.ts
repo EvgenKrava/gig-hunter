@@ -1,6 +1,6 @@
 import { enabledPlatforms, SourceError, type JobSource } from '../adapters/index'
 import { preFilter } from '../filter/index'
-import type { LlmClient } from '../llm/index'
+import { ApiKeyError, isApiKeyRejected, type CreateLlm, type LlmClient } from '../llm/index'
 import type { Logger } from '../logger'
 import { formatMatchMessage, type TelegramClient } from '../notifier/index'
 import { buildScoringSystemPrompt, resolvePrompts } from '../prompts/index'
@@ -13,7 +13,7 @@ export interface PipelineDeps {
   store: Store
   secrets: Secrets
   sources: Record<Platform, JobSource>
-  createLlm: (model: string) => LlmClient
+  createLlm: CreateLlm
   createTelegram: (token: string) => TelegramClient
   appUrl: string
   now: () => Date
@@ -88,7 +88,16 @@ export async function runForUser(deps: PipelineDeps, userId: string, trigger: Ru
     // 2. Fetch → dedup → filter → score → notify, per enabled platform.
     const prompts = resolvePrompts(promptsOverride)
     const systemPrompt = buildScoringSystemPrompt(prompts.scoring, profile)
-    const llm = deps.createLlm(settings.model)
+    const apiKey = settings.anthropic.keySet ? await deps.secrets.getUserSecret(userId, 'anthropic/api-key') : null
+    let llm: LlmClient
+    try {
+      llm = deps.createLlm(settings.model, apiKey)
+    } catch (e) {
+      if (!(e instanceof ApiKeyError)) throw e
+      run.errors.push('claude_key_missing')
+      log.warn('run.skipped', { reason: 'claude_key_missing' })
+      return await finish()
+    }
     const since = new Date(deps.now().getTime() - settings.maxJobAgeHours * 3_600_000)
 
     for (const platform of enabledPlatforms(settings)) {
@@ -125,6 +134,12 @@ export async function runForUser(deps: PipelineDeps, userId: string, trigger: Ru
           try {
             scored = await scoreJob({ client: llm, model: settings.model, systemPrompt, job })
           } catch (e) {
+            if (isApiKeyRejected(e)) {
+              // Every further call would fail the same way; the job stays unwritten and is retried once the key is fixed.
+              run.errors.push('claude_key_rejected')
+              log.warn('run.stopped', { reason: 'claude_key_rejected' })
+              return await finish()
+            }
             run.errors.push(`score:${platform}:${job.externalId}:${errMsg(e)}`)
             log.warn('score.failed', { platform, externalId: job.externalId, err: e })
             continue
