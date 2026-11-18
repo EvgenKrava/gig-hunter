@@ -15,7 +15,7 @@ export function makeApiDeps(overrides: Partial<Record<keyof ApiDeps, unknown>> &
   const { store: _s, ...rest } = overrides
   return {
     store: store as never,
-    secrets: { getUserSecret: vi.fn().mockResolvedValue(null), putUserSecret: vi.fn(), deleteUserSecret: vi.fn(), getAllowedEmails: vi.fn(), userParamName: vi.fn() } as never,
+    secrets: { getUserSecret: vi.fn().mockResolvedValue(null), putUserSecret: vi.fn(), deleteUserSecret: vi.fn(), userParamName: vi.fn() } as never,
     sources: { freelancer: { platform: 'freelancer', fetchRecent: vi.fn(), verifyToken: vi.fn() }, upwork: { platform: 'upwork', fetchRecent: vi.fn(), verifyToken: vi.fn() }, freelancehunt: { platform: 'freelancehunt', fetchRecent: vi.fn(), verifyToken: vi.fn() } } as never,
     createLlm: vi.fn(),
     createTelegram: vi.fn(),

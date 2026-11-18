@@ -23,15 +23,12 @@ bucket = "gighunter-tfstate-<ACCOUNT_ID>"
 
 Prerequisites:
 
-1. A Google OAuth client (Google Cloud Console → APIs & Services → Credentials → Create → OAuth client ID → Web application) with authorized redirect URI
-   `https://gighunter-<ACCOUNT_ID>.auth.us-east-1.amazoncognito.com/oauth2/idpresponse`.
+1. only-tools-core applied: sign-in comes from the shared Only Tools pool, whose ids this root reads from
+   SSM (`/onlytools/auth/*`). Access is the `gighunter-user` role, granted in the Only Tools admin.
 2. `infra/main/terraform.tfvars` (git-ignored):
 
    ```hcl
-   google_client_id     = "....apps.googleusercontent.com"
-   google_client_secret = "..."
-   alarm_email          = "you@example.com"
-   allowed_emails       = ["you@example.com"]
+   alarm_email = "you@example.com"
    ```
 3. Lambda bundles: `pnpm build` from the repo root.
 

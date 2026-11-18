@@ -7,7 +7,7 @@ Design: `docs/superpowers/specs/2026-09-20-gighunter-design.md`.
 ## Layout
 
 - `packages/core` — domain logic (schemas, adapters, filter, scorer, chat, notifier, store, pipeline)
-- `apps/lambdas` — Lambda handlers: `poller`, `api`, `tg-webhook`, `pre-signup`
+- `apps/lambdas` — Lambda handlers: `poller`, `api`, `tg-webhook`
 - `infra/` — Terraform (`bootstrap` = state bucket, `main` = everything else)
 - `scripts/` — local runners (`seed:user`, `poller:local`, `freelancer:probe`)
 
@@ -23,7 +23,7 @@ pnpm build          # esbuild bundles into apps/lambdas/dist/<fn>/index.mjs
 ### Web app
 
 ```bash
-pnpm dev:web            # http://localhost:5173 — signs in against the real Cognito pool (localhost is an allowed callback)
+pnpm dev:web            # http://localhost:5173 — signs in with the shared Only Tools account at auth.onlytools.click (localhost is an allowed callback)
 pnpm --filter @gighunter/web test
 ```
 
