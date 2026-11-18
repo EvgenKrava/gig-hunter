@@ -24,7 +24,7 @@ variable "lambda_dist_dir" {
 }
 variable "llm_provider" {
   type        = string
-  default     = "anthropic"
+  default     = "bedrock"
   description = "Claude backend for the Lambdas: anthropic (Claude API key from SSM) or bedrock (Lambda role, SigV4)"
   validation {
     condition     = contains(["anthropic", "bedrock"], var.llm_provider)

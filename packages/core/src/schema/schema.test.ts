@@ -51,7 +51,7 @@ describe('SettingsSchema', () => {
     expect(SettingsPatchSchema.safeParse({ platforms: { freelancehunt: { skillIds: [1.5] } } }).success).toBe(false)
   })
   it('defaults to Claude Haiku 5.5', () => {
-    expect(DEFAULT_MODEL).toBe('claude-haiku-5-5')
+    expect(DEFAULT_MODEL).toBe('claude-haiku-4-5')
     expect(KNOWN_MODELS.map((m) => m.id)).toContain(DEFAULT_MODEL)
   })
   it('normalizes model IDs saved in Bedrock form when reading stored settings and patches', () => {

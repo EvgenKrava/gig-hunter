@@ -3,12 +3,12 @@ import { IsoDate } from './common'
 
 // Settings hold Claude API model IDs whatever the LLM backend; the Bedrock client maps them to Bedrock IDs.
 // Note: as of 2026-10-19 Bedrock answers every 5.x model with 403 "not available for this account", so Haiku 5.5
-// works only through the direct Anthropic API (the default backend).
-export const DEFAULT_MODEL = 'claude-haiku-5-5'
+// works only through the direct Anthropic API. Bedrock is the default backend, so the default model is Haiku 4.5.
+export const DEFAULT_MODEL = 'claude-haiku-4-5'
 
 export const KNOWN_MODELS: { id: string; label: string }[] = [
-  { id: DEFAULT_MODEL, label: 'Claude Haiku 5.5 (fast, cheapest)' },
-  { id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5' },
+  { id: DEFAULT_MODEL, label: 'Claude Haiku 4.5 (fast, cheapest)' },
+  { id: 'claude-haiku-5-5', label: 'Claude Haiku 5.5' },
   { id: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
   { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5' },
   { id: 'claude-opus-4-6', label: 'Claude Opus 4.6' },
