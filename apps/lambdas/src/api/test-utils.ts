@@ -29,7 +29,7 @@ export function makeApiDeps(overrides: Partial<Record<keyof ApiDeps, unknown>> &
   }
 }
 
-export const authed = (sub = 'u1', email = 'me@example.com') => ({ event: { requestContext: { authorizer: { jwt: { claims: { sub, email } } } } } })
+export const authed = (sub = 'u1', email = 'me@example.com', groups = '[gighunter-user]') => ({ event: { requestContext: { authorizer: { jwt: { claims: { sub, email, 'cognito:groups': groups } } } } } })
 export const anonymous = () => ({ event: { requestContext: {} } })
 export const json = (body: unknown, method = 'POST') => ({ method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
 

@@ -24,15 +24,25 @@ function renderApp(initialPath: string) {
 }
 
 describe('/_app guard', () => {
-  it('bounces a signed-out deep link to the landing page exactly once and remembers the full link', async () => {
-    setAuth(mockAuth({ isAuthenticated: false, user: undefined }))
+  it('bounces a signed-out deep link to the shared sign-in exactly once and remembers the full link', async () => {
+    const auth = mockAuth({ isAuthenticated: false, user: undefined })
+    setAuth(auth)
     sessionStorage.clear()
     const { router, navigate } = renderApp('/jobs/freelancer/42?tab=chat')
     await waitFor(() => expect(router.state.location.pathname).toBe('/'))
-    await screen.findByRole('button', { name: /sign in with google/i })
-    expect(sessionStorage.getItem('returnTo')).toBe('/jobs/freelancer/42?tab=chat')
+    await waitFor(() => expect(auth.signinRedirect).toHaveBeenCalledWith({ state: { returnTo: '/jobs/freelancer/42?tab=chat' } }))
+    expect(auth.signinRedirect).toHaveBeenCalledTimes(1)
     expect(navigate).toHaveBeenCalledTimes(1)
     expect(navigate).toHaveBeenCalledWith(expect.objectContaining({ to: '/', replace: true }))
+  })
+
+  it('shows the invite-only screen to an Only Tools user without the gighunter-user role', async () => {
+    const auth = mockAuth()
+    auth.user!.profile['cognito:groups'] = ['carlog-user']
+    setAuth(auth)
+    renderApp('/settings')
+    await screen.findByRole('heading', { name: /invite-only/i })
+    expect(screen.queryByRole('navigation', { name: /primary/i })).toBeNull()
   })
 
   it('renders the shell for a signed-in user without navigating away', async () => {

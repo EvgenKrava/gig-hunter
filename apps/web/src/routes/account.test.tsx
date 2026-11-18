@@ -78,11 +78,4 @@ describe('Legal pages', () => {
     expect(contacts.length).toBeGreaterThan(0)
     for (const c of contacts) expect(c).toHaveAttribute('href', 'mailto:oldfromkb@gmail.com')
   })
-
-  it('landing page footer links to both', async () => {
-    renderAt('/')
-    await screen.findByRole('button', { name: /sign in with google/i })
-    expect(screen.getByRole('link', { name: /terms/i })).toHaveAttribute('href', '/terms')
-    expect(screen.getByRole('link', { name: /privacy/i })).toHaveAttribute('href', '/privacy')
-  })
 })

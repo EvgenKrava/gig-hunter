@@ -20,8 +20,8 @@ export function buildOidcConfig(config: AppConfig): AuthProviderProps {
   }
 }
 
-/** Skips the Hosted UI provider picker and lands on Google directly. */
-export const signinArgs = (returnTo: string) => ({ extraQueryParams: { identity_provider: 'Google' }, state: { returnTo } })
+/** Sign-in goes to the shared Only Tools page (email or Google) and comes back to `returnTo`. */
+export const signinArgs = (returnTo: string) => ({ state: { returnTo } })
 
 export const logoutUrl = (config: AppConfig) =>
   `${config.cognito.domain}/logout?client_id=${encodeURIComponent(config.cognito.clientId)}&logout_uri=${encodeURIComponent(`${config.appUrl}/`)}`

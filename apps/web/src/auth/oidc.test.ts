@@ -15,8 +15,8 @@ describe('oidc helpers', () => {
     expect(sessionStorage.getItem('oidc.k')).toBeNull()
     await store.remove('k')
   })
-  it('signinArgs goes straight to Google and carries returnTo', () => {
-    expect(signinArgs('/jobs/freelancer/1')).toEqual({ extraQueryParams: { identity_provider: 'Google' }, state: { returnTo: '/jobs/freelancer/1' } })
+  it('signinArgs carries returnTo to the shared sign-in', () => {
+    expect(signinArgs('/jobs/freelancer/1')).toEqual({ state: { returnTo: '/jobs/freelancer/1' } })
   })
   it('logoutUrl points at the Cognito logout endpoint with the app root', () => {
     expect(logoutUrl(config)).toBe('https://auth.test/logout?client_id=cid&logout_uri=https%3A%2F%2Fapp.test%2F')

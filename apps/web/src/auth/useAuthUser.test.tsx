@@ -13,7 +13,7 @@ describe('useAuthUser', () => {
     const auth = mockAuth()
     setAuth(auth)
     renderWithProviders(<Probe />)
-    expect(read().user).toEqual({ sub: 'u1', email: 'me@example.com', idToken: 'tok', expiresAt: auth.user!.expires_at })
+    expect(read().user).toEqual({ sub: 'u1', email: 'me@example.com', groups: ['gighunter-user'], idToken: 'tok', expiresAt: auth.user!.expires_at })
   })
   it('keeps an expired session that still holds a refresh token as the user — it is renewable, not signed out', () => {
     setAuth(expiredAuth())
