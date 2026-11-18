@@ -11,6 +11,6 @@ export const matchGsi2pk = (userId: string, status: MatchStatus) => `${userPk(us
 export const GSI1 = 'gsi1'
 export const GSI2 = 'gsi2'
 export const ttlAfterDays = (iso: string, days: number) => Math.floor(new Date(iso).getTime() / 1000) + days * 86_400
-export const MATCH_TTL_DAYS = 60
+export const MATCH_TTL_DAYS = 30
 export const RUN_TTL_DAYS = 30
-export const CHAT_TTL_DAYS = 60
+export const CHAT_TTL_DAYS = 30
