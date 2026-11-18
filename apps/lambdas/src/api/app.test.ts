@@ -10,7 +10,12 @@ describe('app', () => {
   it('/me returns sub and email from claims', async () => {
     const res = await createApp(makeApiDeps()).request('/me', {}, authed('abc', 'a@b.c'))
     expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({ sub: 'abc', email: 'a@b.c' })
+    expect(await res.json()).toEqual({ sub: 'abc', email: 'a@b.c', groups: ['gighunter-user'] })
+  })
+  it('403 no_access for a signed-in Only Tools user without the gighunter-user role', async () => {
+    const res = await createApp(makeApiDeps()).request('/me', {}, authed('abc', 'a@b.c', '[carlog-user foodlog-user]'))
+    expect(res.status).toBe(403)
+    expect(await res.json()).toEqual({ error: 'no_access' })
   })
   it('answers OPTIONS preflight with 204 without auth', async () => {
     const res = await createApp(makeApiDeps()).request('/matches', { method: 'OPTIONS' }, anonymous())

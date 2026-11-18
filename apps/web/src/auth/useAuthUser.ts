@@ -4,7 +4,11 @@ import { useRouter } from '@tanstack/react-router'
 import { logoutUrl, signinArgs } from './oidc'
 import { renewSession } from './session'
 
-export interface AuthUser { sub: string; email: string; idToken: string; expiresAt: number }
+export interface AuthUser { sub: string; email: string; groups: string[]; idToken: string; expiresAt: number }
+
+/** Role in the shared Only Tools account that opens GigHunter (invite-only). */
+export const ACCESS_GROUP = 'gighunter-user'
+export const hasAccess = (user: AuthUser) => user.groups.includes(ACCESS_GROUP)
 
 export function useAuthUser() {
   const auth = useAuth()
@@ -17,7 +21,13 @@ export function useAuthUser() {
   const live = auth.isAuthenticated || (!!session?.refresh_token && !auth.error)
   const user: AuthUser | null =
     live && session?.id_token && typeof profile?.sub === 'string'
-      ? { sub: profile.sub, email: typeof profile.email === 'string' ? profile.email : '', idToken: session.id_token, expiresAt: session.expires_at ?? 0 }
+      ? {
+          sub: profile.sub,
+          email: typeof profile.email === 'string' ? profile.email : '',
+          groups: Array.isArray(profile['cognito:groups']) ? (profile['cognito:groups'] as unknown[]).map(String) : [],
+          idToken: session.id_token,
+          expiresAt: session.expires_at ?? 0,
+        }
       : null
   const { signinSilent } = auth
   const renew = useCallback(() => renewSession({ signinSilent }), [signinSilent])

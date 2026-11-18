@@ -122,8 +122,9 @@ resource "aws_iam_role_policy" "fn" {
 # same `local.roles` map as the API's, so referencing the pool ARN from there is a cycle.
 data "aws_iam_policy_document" "api_cognito" {
   statement {
-    actions   = ["cognito-idp:ListUsers", "cognito-idp:AdminDeleteUser"]
-    resources = [aws_cognito_user_pool.main.arn]
+    # Deleting a GigHunter account only removes the gighunter-user role; the Only Tools account stays.
+    actions   = ["cognito-idp:ListUsers", "cognito-idp:AdminRemoveUserFromGroup"]
+    resources = [nonsensitive(data.aws_ssm_parameter.shared_pool_arn.value)]
   }
 }
 
