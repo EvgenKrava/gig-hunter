@@ -10,6 +10,7 @@ import { MatchingBlock } from '../features/settings/MatchingBlock'
 import { PromptsBlock } from '../features/settings/PromptsBlock'
 import { TelegramBlock } from '../features/settings/TelegramBlock'
 import { UpworkBlock } from '../features/settings/UpworkBlock'
+import { useT } from '../i18n'
 
 export const Route = createFileRoute('/_app/settings')({ component: SettingsPage })
 
@@ -17,11 +18,12 @@ function SettingsPage() {
   const settings = useSettings()
   const patch = usePatchSettings()
   const toast = useToast()
-  const onPatch = (p: Parameters<typeof patch.mutate>[0]) => patch.mutate(p, { onSuccess: () => toast('Saved', 'success'), onError: (e) => toast(e.message, 'error') })
+  const { t } = useT()
+  const onPatch = (p: Parameters<typeof patch.mutate>[0]) => patch.mutate(p, { onSuccess: () => toast(t('common.saved'), 'success'), onError: (e) => toast(e.message, 'error') })
   const s = settings.data
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Settings</h1>
+      <h1 className="text-xl font-semibold">{t('settings.title')}</h1>
       {!s ? (
         settings.error
           ? <p className="text-red-600">{settings.error.message}</p>

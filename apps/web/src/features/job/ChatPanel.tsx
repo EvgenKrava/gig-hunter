@@ -7,11 +7,13 @@ import { useToast } from '../../components/Toast'
 import { Button } from '../../components/ui/Button'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { Skeleton } from '../../components/ui/Skeleton'
+import { useT } from '../../i18n'
 
 export function ChatPanel({ matchRef, chat, quickActions }: { matchRef: MatchRef; chat: Chat | null; quickActions: QuickAction[] }) {
   const send = useSendChat(matchRef)
   const reset = useResetChat(matchRef)
   const toast = useToast()
+  const { t } = useT()
   const [draft, setDraft] = useState('')
   const [pendingText, setPendingText] = useState<string | null>(null)
   const [truncated, setTruncated] = useState(false)
@@ -40,22 +42,22 @@ export function ChatPanel({ matchRef, chat, quickActions }: { matchRef: MatchRef
     })
   }
   const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(draft) } }
-  const copy = (t: string) => navigator.clipboard?.writeText(t).then(() => toast('Copied', 'success'))
+  const copy = (text: string) => navigator.clipboard?.writeText(text).then(() => toast(t('common.copied'), 'success'))
 
   return (
-    <section className="flex flex-col" aria-label="Chat">
+    <section className="flex flex-col" aria-label={t('chat.title')}>
       <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Chat</h2>
-        {messages.length > 0 && <Button variant="ghost" onClick={() => setConfirmReset(true)} aria-label="Reset chat"><RotateCcw size={16} />Reset chat</Button>}
+        <h2 className="text-lg font-semibold">{t('chat.title')}</h2>
+        {messages.length > 0 && <Button variant="ghost" onClick={() => setConfirmReset(true)} aria-label={t('chat.reset')}><RotateCcw size={16} />{t('chat.reset')}</Button>}
       </div>
       <div className="space-y-3">
-        {messages.length === 0 && !pendingText && <p className="text-sm text-slate-500">Ask anything about this job, or tap a quick action. The assistant knows your profile, the post and the score.</p>}
+        {messages.length === 0 && !pendingText && <p className="text-sm text-slate-500">{t('chat.empty')}</p>}
         {messages.map((m, i) => <Bubble key={i} m={m} onCopy={m.role === 'assistant' ? () => copy(m.content) : undefined} />)}
         {pendingText && (<>
           <Bubble m={{ role: 'user', content: pendingText, at: '' }} />
-          <p className="text-sm text-slate-500" role="status">Thinking…</p>
+          <p className="text-sm text-slate-500" role="status">{t('chat.thinking')}</p>
         </>)}
-        {truncated && <p className="text-xs text-amber-700">The reply was cut off by the length limit — ask to continue.</p>}
+        {truncated && <p className="text-xs text-amber-700">{t('chat.truncated')}</p>}
       </div>
       {/* Sticks right on top of the bottom nav on phones (shared --bottom-nav height), on the viewport edge on desktop. */}
       <div className="sticky bottom-(--bottom-nav) z-30 -mx-4 mt-4 border-t border-slate-200 bg-white px-4 pb-2 pt-2 md:bottom-0 md:pb-[max(0.5rem,env(safe-area-inset-bottom))] dark:border-slate-800 dark:bg-slate-950">
@@ -66,13 +68,13 @@ export function ChatPanel({ matchRef, chat, quickActions }: { matchRef: MatchRef
           </div>
         )}
         <div className="flex items-end gap-2">
-          <textarea value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={onKey} disabled={send.isPending} rows={1} placeholder="Ask about this job…" enterKeyHint="send"
+          <textarea value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={onKey} disabled={send.isPending} rows={1} placeholder={t('chat.placeholder')} enterKeyHint="send"
             className="max-h-40 min-h-11 flex-1 resize-none rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base outline-none focus:border-brand dark:border-slate-700 dark:bg-slate-950" />
-          <Button onClick={() => submit(draft)} disabled={!draft.trim()} loading={send.isPending} aria-label="Send"><SendHorizontal size={18} /></Button>
+          <Button onClick={() => submit(draft)} disabled={!draft.trim()} loading={send.isPending} aria-label={t('chat.send')}><SendHorizontal size={18} /></Button>
         </div>
       </div>
       <div ref={endRef} className="scroll-mb-(--bottom-nav) md:scroll-mb-0" />
-      <ConfirmDialog open={confirmReset} title="Reset this chat?" body="The conversation for this job will be deleted." confirmLabel="Reset" danger
+      <ConfirmDialog open={confirmReset} title={t('chat.resetTitle')} body={t('chat.resetBody')} confirmLabel={t('chat.resetConfirm')} danger
         onCancel={() => setConfirmReset(false)} onConfirm={() => { setConfirmReset(false); reset.mutate(undefined, { onError: (e) => toast(e.message, 'error') }) }} />
     </section>
   )
@@ -80,11 +82,12 @@ export function ChatPanel({ matchRef, chat, quickActions }: { matchRef: MatchRef
 
 function Bubble({ m, onCopy }: { m: ChatMessage; onCopy?: () => void }) {
   const mine = m.role === 'user'
+  const { t } = useT()
   return (
     <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
       <div className={`relative max-w-[88%] rounded-2xl px-3.5 py-2.5 text-base ${mine ? 'bg-brand text-white' : 'bg-slate-100 dark:bg-slate-800'}`}>
         {mine ? <p className="whitespace-pre-wrap">{m.content}</p> : <div className="md"><Markdown>{m.content}</Markdown></div>}
-        {onCopy && <button type="button" onClick={onCopy} aria-label="Copy" className="mt-1 inline-flex min-h-11 items-center gap-1 px-1 text-xs text-slate-500"><Copy size={12} />Copy</button>}
+        {onCopy && <button type="button" onClick={onCopy} aria-label={t('common.copy')} className="mt-1 inline-flex min-h-11 items-center gap-1 px-1 text-xs text-slate-500"><Copy size={12} />{t('common.copy')}</button>}
       </div>
     </div>
   )

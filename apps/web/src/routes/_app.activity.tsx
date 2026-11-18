@@ -3,16 +3,18 @@ import { useRuns } from '../api/hooks'
 import { RunNowButton } from '../components/RunNowButton'
 import { SkeletonPage } from '../components/ui/Skeleton'
 import { RunsList, RunsListSkeleton } from '../features/jobs/RunsList'
+import { useT } from '../i18n'
 
 export const Route = createFileRoute('/_app/activity')({ component: ActivityPage })
 
 /** The search itself — manual trigger and the last runs — kept apart from the jobs it finds. */
 function ActivityPage() {
   const runs = useRuns()
+  const { t } = useT()
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Activity</h1>
+        <h1 className="text-xl font-semibold">{t('activity.title')}</h1>
         <RunNowButton />
       </div>
       {runs.isLoading && <SkeletonPage><RunsListSkeleton /></SkeletonPage>}
