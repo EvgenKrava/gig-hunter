@@ -15,7 +15,7 @@ resource "aws_lambda_function" "poller" {
   function_name    = "${var.project}-poller"
   role             = aws_iam_role.fn["poller"].arn
   handler          = "index.handler"
-  runtime          = "nodejs22.x"
+  runtime          = "nodejs24.x"
   architectures    = ["arm64"]
   filename         = data.archive_file.fn["poller"].output_path
   source_code_hash = data.archive_file.fn["poller"].output_base64sha256
@@ -39,7 +39,7 @@ resource "aws_lambda_function" "api" {
   function_name    = "${var.project}-api"
   role             = aws_iam_role.fn["api"].arn
   handler          = "index.handler"
-  runtime          = "nodejs22.x"
+  runtime          = "nodejs24.x"
   architectures    = ["arm64"]
   filename         = data.archive_file.fn["api"].output_path
   source_code_hash = data.archive_file.fn["api"].output_base64sha256
@@ -62,7 +62,7 @@ resource "aws_lambda_function" "tg_webhook" {
   function_name    = "${var.project}-tg-webhook"
   role             = aws_iam_role.fn["tg_webhook"].arn
   handler          = "index.handler"
-  runtime          = "nodejs22.x"
+  runtime          = "nodejs24.x"
   architectures    = ["arm64"]
   filename         = data.archive_file.fn["tg-webhook"].output_path
   source_code_hash = data.archive_file.fn["tg-webhook"].output_base64sha256
@@ -81,7 +81,7 @@ resource "aws_lambda_function" "pre_signup" {
   function_name    = "${var.project}-pre-signup"
   role             = aws_iam_role.fn["pre_signup"].arn
   handler          = "index.handler"
-  runtime          = "nodejs22.x"
+  runtime          = "nodejs24.x"
   architectures    = ["arm64"]
   filename         = data.archive_file.fn["pre-signup"].output_path
   source_code_hash = data.archive_file.fn["pre-signup"].output_base64sha256
