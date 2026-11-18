@@ -7,6 +7,3 @@ output "table_name" { value = aws_dynamodb_table.main.name }
 output "poller_function_name" { value = aws_lambda_function.poller.function_name }
 output "cognito_user_pool_id" { value = nonsensitive(data.aws_ssm_parameter.shared_pool_id.value) }
 output "cognito_client_id" { value = nonsensitive(data.aws_ssm_parameter.shared_client.value) }
-output "legacy_cognito_user_pool_id" { value = aws_cognito_user_pool.main.id }
-output "cognito_domain" { value = "${aws_cognito_user_pool_domain.main.domain}.auth.${var.region}.amazoncognito.com" }
-output "google_redirect_uri" { value = "https://${aws_cognito_user_pool_domain.main.domain}.auth.${var.region}.amazoncognito.com/oauth2/idpresponse" }

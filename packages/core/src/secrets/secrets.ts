@@ -34,9 +34,4 @@ export class Secrets {
       if (!(e instanceof ParameterNotFound)) throw e
     }
   }
-
-  async getAllowedEmails(): Promise<string[]> {
-    const raw = (await this.get(`${this.prefix}/auth/allowed-emails`)) ?? ''
-    return raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
-  }
 }

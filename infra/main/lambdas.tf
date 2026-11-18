@@ -76,19 +76,3 @@ resource "aws_lambda_function" "tg_webhook" {
   }
   depends_on = [aws_cloudwatch_log_group.fn]
 }
-
-resource "aws_lambda_function" "pre_signup" {
-  function_name    = "${var.project}-pre-signup"
-  role             = aws_iam_role.fn["pre_signup"].arn
-  handler          = "index.handler"
-  runtime          = "nodejs22.x"
-  architectures    = ["arm64"]
-  filename         = data.archive_file.fn["pre-signup"].output_path
-  source_code_hash = data.archive_file.fn["pre-signup"].output_base64sha256
-  timeout          = 10
-  memory_size      = 256
-  environment {
-    variables = { SSM_PREFIX = local.ssm_prefix }
-  }
-  depends_on = [aws_cloudwatch_log_group.fn]
-}

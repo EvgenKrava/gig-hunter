@@ -1,6 +1,6 @@
 import { build } from 'esbuild'
 
-const functions = ['poller', 'api', 'tg-webhook', 'pre-signup']
+const functions = ['poller', 'api', 'tg-webhook']
 
 await Promise.all(
   functions.map((fn) =>

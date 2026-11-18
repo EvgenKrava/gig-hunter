@@ -11,7 +11,6 @@ data "aws_iam_policy_document" "lambda_assume" {
 locals {
   table_arns    = [aws_dynamodb_table.main.arn, "${aws_dynamodb_table.main.arn}/index/*"]
   ssm_users_arn = "arn:aws:ssm:${var.region}:${local.account_id}:parameter${local.ssm_prefix}/users/*"
-  ssm_auth_arn  = "arn:aws:ssm:${var.region}:${local.account_id}:parameter${local.ssm_prefix}/auth/*"
   ddb_rw        = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:Query", "dynamodb:BatchGetItem"]
 
   # Claude access for the poller and API. With `anthropic` each user's own Claude API key sits under /users/ (read by
@@ -82,19 +81,11 @@ data "aws_iam_policy_document" "tg_webhook" {
   }
 }
 
-data "aws_iam_policy_document" "pre_signup" {
-  statement {
-    actions   = ["ssm:GetParameter"]
-    resources = [local.ssm_auth_arn]
-  }
-}
-
 locals {
   roles = {
     poller     = data.aws_iam_policy_document.poller.json
     api        = data.aws_iam_policy_document.api.json
     tg_webhook = data.aws_iam_policy_document.tg_webhook.json
-    pre_signup = data.aws_iam_policy_document.pre_signup.json
   }
 }
 
@@ -117,9 +108,7 @@ resource "aws_iam_role_policy" "fn" {
   policy   = each.value
 }
 
-# Self-serve account deletion: DELETE /me looks the caller up by sub and removes the Cognito user. A separate
-# policy rather than a statement in `api`: the pool depends on the pre-signup Lambda, whose role comes from the
-# same `local.roles` map as the API's, so referencing the pool ARN from there is a cycle.
+# Self-serve account deletion: DELETE /me looks the caller up by sub in the shared pool and removes the role.
 data "aws_iam_policy_document" "api_cognito" {
   statement {
     # Deleting a GigHunter account only removes the gighunter-user role; the Only Tools account stays.
