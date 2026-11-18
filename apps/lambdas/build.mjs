@@ -8,7 +8,7 @@ await Promise.all(
       entryPoints: [`src/${fn}/index.ts`],
       bundle: true,
       platform: 'node',
-      target: 'node22',
+      target: 'node24',
       format: 'esm',
       outfile: `dist/${fn}/index.mjs`,
       sourcemap: false,
