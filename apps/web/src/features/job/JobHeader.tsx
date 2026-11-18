@@ -5,12 +5,14 @@ import { Details } from '../../components/ui/Details'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { budgetLabel, timeAgo, verdictTone } from '../../lib/format'
 import { FeedbackButtons } from './FeedbackButtons'
+import { useT } from '../../i18n'
 
 export function JobHeader({ match }: { match: Match }) {
   const { job, score, verdict } = match
+  const { t } = useT()
   const client = job.client
-    ? [job.client.country, job.client.rating !== undefined && `★ ${job.client.rating}`, job.client.reviews !== undefined && `${job.client.reviews} reviews`, job.client.paymentVerified ? 'payment verified' : 'unverified'].filter(Boolean).join(' · ')
-    : 'client unknown'
+    ? [job.client.country, job.client.rating !== undefined && `★ ${job.client.rating}`, job.client.reviews !== undefined && t('job.reviews', { n: job.client.reviews }), job.client.paymentVerified ? t('job.paymentVerified') : t('job.unverified')].filter(Boolean).join(' · ')
+    : t('job.clientUnknown')
   return (
     <header className="space-y-3">
       <div className="flex items-start gap-3">
@@ -21,16 +23,16 @@ export function JobHeader({ match }: { match: Match }) {
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        {verdict && <Badge tone={verdictTone(verdict)}>{verdict}</Badge>}
+        {verdict && <Badge tone={verdictTone(verdict)}>{t(`verdict.${verdict}`)}</Badge>}
         {score && <span className="text-slate-500">~{score.estimatedHours}h</span>}
-        {match.filterReason && <Badge tone="slate">filtered: {match.filterReason}</Badge>}
-        <a href={job.url} target="_blank" rel="noreferrer" className="ml-auto inline-flex min-h-11 items-center gap-1 text-brand"><ExternalLink size={16} />Open on {job.platform}</a>
+        {match.filterReason && <Badge tone="slate">{t('job.filtered', { reason: match.filterReason })}</Badge>}
+        <a href={job.url} target="_blank" rel="noreferrer" className="ml-auto inline-flex min-h-11 items-center gap-1 text-brand"><ExternalLink size={16} />{t('job.openOn', { platform: job.platform })}</a>
       </div>
-      <Details summary="Job details, assessment and client">
-        {score && <p className="mb-2"><span className="font-medium">Why:</span> {score.reasoning}</p>}
-        {score && score.risks.length > 0 && <p className="mb-2"><span className="font-medium">Risks:</span> {score.risks.join('; ')}</p>}
-        <p className="mb-2"><span className="font-medium">Client:</span> {client}</p>
-        {job.skills.length > 0 && <p className="mb-2"><span className="font-medium">Skills:</span> {job.skills.join(', ')}</p>}
+      <Details summary={t('job.details')}>
+        {score && <p className="mb-2"><span className="font-medium">{t('job.why')}</span> {score.reasoning}</p>}
+        {score && score.risks.length > 0 && <p className="mb-2"><span className="font-medium">{t('job.risks')}</span> {score.risks.join('; ')}</p>}
+        <p className="mb-2"><span className="font-medium">{t('job.client')}</span> {client}</p>
+        {job.skills.length > 0 && <p className="mb-2"><span className="font-medium">{t('job.skills')}</span> {job.skills.join(', ')}</p>}
         <p className="whitespace-pre-wrap">{job.description}</p>
       </Details>
       <FeedbackButtons matchRef={{ platform: job.platform, externalId: job.externalId }} feedback={match.feedback} />

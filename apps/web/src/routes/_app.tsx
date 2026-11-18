@@ -3,6 +3,7 @@ import { createFileRoute, Outlet, useLocation, useNavigate } from '@tanstack/rea
 import { hasAccess, useAuthUser } from '../auth/useAuthUser'
 import { AppShell } from '../components/AppShell'
 import { FormCardSkeleton, Skeleton, SkeletonPage } from '../components/ui/Skeleton'
+import { useT } from '../i18n'
 
 export const Route = createFileRoute('/_app')({ component: AppGuard })
 
@@ -42,15 +43,16 @@ function AppGuard() {
 /** Signed in to Only Tools, but GigHunter is invite-only and this account has no gighunter-user role. */
 export function NoAccess({ email }: { email: string }) {
   const { signOut } = useAuthUser()
+  const { t, tRich } = useT()
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-3 px-4">
-      <h1 className="text-2xl font-bold">GigHunter is invite-only</h1>
+      <h1 className="text-2xl font-bold">{t('noAccess.title')}</h1>
       <p className="text-slate-600 dark:text-slate-300">
-        You are signed in as <b>{email}</b>, but this account has no access to GigHunter yet. Ask the Only Tools admin for an invite.
+        {tRich('noAccess.text', { email: <b>{email}</b> })}
       </p>
       <div className="flex gap-3">
-        <a className="inline-flex min-h-11 items-center rounded-lg bg-brand px-4 text-white" href="https://onlytools.click">Other Only Tools apps</a>
-        <button className="min-h-11 rounded-lg border border-slate-300 px-4 dark:border-slate-700" onClick={signOut}>Sign out</button>
+        <a className="inline-flex min-h-11 items-center rounded-lg bg-brand px-4 text-white" href="https://onlytools.click">{t('noAccess.otherApps')}</a>
+        <button className="min-h-11 rounded-lg border border-slate-300 px-4 dark:border-slate-700" onClick={signOut}>{t('menu.signOut')}</button>
       </div>
     </main>
   )

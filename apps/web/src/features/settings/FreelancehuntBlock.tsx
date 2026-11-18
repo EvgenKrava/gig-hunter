@@ -4,12 +4,14 @@ import type { PublicSettings } from '../../api/hooks'
 import { RunNowButton } from '../../components/RunNowButton'
 import { Card } from '../../components/ui/Card'
 import { Toggle } from '../../components/ui/Toggle'
+import { useT } from '../../i18n'
 
 /** Quick taps on several chips collapse into one PATCH carrying the final list. */
 const SAVE_DELAY_MS = 400
 
 export function FreelancehuntBlock({ settings, onPatch }: { settings: PublicSettings; onPatch: (p: SettingsPatch) => void }) {
   const f = settings.platforms.freelancehunt
+  const { t, tRich } = useT()
   const [draft, setDraft] = useState(f.skillIds)
   const pending = useRef<{ timer: ReturnType<typeof setTimeout>; skillIds: number[] } | null>(null)
   const onPatchRef = useRef(onPatch)
@@ -39,12 +41,11 @@ export function FreelancehuntBlock({ settings, onPatch }: { settings: PublicSett
     <Card className="space-y-3">
       <h2 className="text-lg font-semibold">Freelancehunt</h2>
       <p className="text-sm text-slate-600 dark:text-slate-300">
-        Public projects, no token needed. Bids happen on{' '}
-        <a className="underline" href="https://freelancehunt.com/projects" target="_blank" rel="noreferrer">freelancehunt.com</a>.
+        {tRich('fh.text', { link: <a className="underline" href="https://freelancehunt.com/projects" target="_blank" rel="noreferrer">freelancehunt.com</a> })}
       </p>
-      <Toggle label="Poll Freelancehunt" checked={f.enabled} onChange={(enabled) => onPatch({ platforms: { freelancehunt: { enabled } } })} />
+      <Toggle label={t('fh.poll')} checked={f.enabled} onChange={(enabled) => onPatch({ platforms: { freelancehunt: { enabled } } })} />
       <fieldset className="space-y-2">
-        <legend className="text-sm font-medium">Skills</legend>
+        <legend className="text-sm font-medium">{t('fh.skills')}</legend>
         <div className="flex flex-wrap gap-2">
           {FREELANCEHUNT_SKILLS.map((s) => {
             const on = draft.includes(s.id)
@@ -56,7 +57,7 @@ export function FreelancehuntBlock({ settings, onPatch }: { settings: PublicSett
             )
           })}
         </div>
-        {draft.length === 0 && <p className="text-sm text-amber-700 dark:text-amber-400">Pick at least one skill — nothing is fetched without one.</p>}
+        {draft.length === 0 && <p className="text-sm text-amber-700 dark:text-amber-400">{t('fh.pick')}</p>}
       </fieldset>
       <RunNowButton />
     </Card>

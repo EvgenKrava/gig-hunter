@@ -27,12 +27,12 @@ describe('Account page', () => {
   })
   afterEach(() => vi.restoreAllMocks())
 
-  it('shows the Google identity and a link to manage it; no password controls', async () => {
+  it('shows the Only Tools identity and a link to manage it; no password controls', async () => {
     renderAt('/account')
     await screen.findByRole('heading', { name: /^account$/i })
-    expect(screen.getByText(/signed in with google/i)).toBeInTheDocument()
+    expect(screen.getByText(/signed in to only tools/i)).toBeInTheDocument()
     expect(screen.getByText('me@example.com')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /manage google account/i })).toHaveAttribute('href', 'https://myaccount.google.com/security')
+    expect(screen.getByRole('link', { name: /open only tools/i })).toHaveAttribute('href', 'https://onlytools.click')
     expect(screen.queryByLabelText(/password/i)).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /password/i })).not.toBeInTheDocument()
   })

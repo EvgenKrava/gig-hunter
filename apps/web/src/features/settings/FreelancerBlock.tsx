@@ -10,15 +10,17 @@ import { Field } from '../../components/ui/Field'
 import { TextInput } from '../../components/ui/Inputs'
 import { Toggle } from '../../components/ui/Toggle'
 import { TokenInput } from './TokenInput'
+import { useT } from '../../i18n'
 
 export function FreelancerBlock({ settings, onPatch }: { settings: PublicSettings; onPatch: (p: SettingsPatch) => void }) {
   const save = useSaveToken('freelancer'); const remove = useRemoveToken('freelancer')
   const toast = useToast()
+  const { t, tRich } = useT()
   const f = settings.platforms.freelancer
   const [query, setQuery] = useState(f.query)
   const submittedRef = useRef(f.query)
   useEffect(() => { setQuery(f.query); submittedRef.current = f.query }, [f.query])
-  const wrap = <T,>(p: Promise<T>) => p.then((r) => { toast('Saved', 'success'); return r }).catch((e) => { toast(e.message, 'error'); throw e })
+  const wrap = <T,>(p: Promise<T>) => p.then((r) => { toast(t('common.saved'), 'success'); return r }).catch((e) => { toast(e.message, 'error'); throw e })
   const saveQuery = () => {
     if (query === submittedRef.current) return
     submittedRef.current = query
@@ -28,24 +30,24 @@ export function FreelancerBlock({ settings, onPatch }: { settings: PublicSetting
   return (
     <Card className="space-y-3">
       <h2 className="text-lg font-semibold">Freelancer.com</h2>
-      <Details summary="How to get an API token">
+      <Details summary={t('fl.how')}>
         <ol className="list-decimal space-y-1 pl-4">
-          <li>Sign in and open <a className="underline" href="https://www.freelancer.com/developers" target="_blank" rel="noreferrer">freelancer.com/developers</a> → create an app.</li>
-          <li>Generate an OAuth token for your own account.</li>
-          <li>Paste it below — we verify it against your account.</li>
+          <li>{tRich('fl.step1', { link: <a className="underline" href="https://www.freelancer.com/developers" target="_blank" rel="noreferrer">freelancer.com/developers</a> })}</li>
+          <li>{t('fl.step2')}</li>
+          <li>{t('fl.step3')}</li>
         </ol>
       </Details>
-      <TokenInput label="Freelancer token" placeholder="oauth token" tokenSet={f.tokenSet} tokenHint={f.tokenHint}
+      <TokenInput label={t('fl.token')} placeholder="oauth token" tokenSet={f.tokenSet} tokenHint={f.tokenHint}
         onSave={(token) => wrap(save.mutateAsync(token))} onRemove={() => wrap(remove.mutateAsync())} />
       {f.tokenSet && (
         <div className="space-y-3 text-sm">
-          <p>Connected as {f.connectedAs} ✓</p>
-          <Toggle label="Poll Freelancer.com" checked={f.enabled} onChange={(enabled) => onPatch({ platforms: { freelancer: { enabled } } })} />
-          <Field label="Search query" hint="Sent to the Freelancer search API every poll, e.g. “typescript react node”">
+          <p>{t('fl.connected', { name: f.connectedAs ?? '' })}</p>
+          <Toggle label={t('fl.poll')} checked={f.enabled} onChange={(enabled) => onPatch({ platforms: { freelancer: { enabled } } })} />
+          <Field label={t('fl.query')} hint={t('fl.queryHint')}>
             <TextInput value={query} onChange={(e) => setQuery(e.target.value)} onBlur={saveQuery} onKeyDown={onQueryKey} enterKeyHint="go" />
           </Field>
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" disabled={query === f.query} onClick={saveQuery}>Save query</Button>
+            <Button variant="secondary" disabled={query === f.query} onClick={saveQuery}>{t('fl.saveQuery')}</Button>
             <RunNowButton />
           </div>
         </div>

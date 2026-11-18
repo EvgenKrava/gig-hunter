@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Card } from './Card'
+import { t } from '../../i18n'
 
 /** A grey bone in the shape of the content on its way; size it with className. */
 export const Skeleton = ({ className = '' }: { className?: string }) => (
@@ -8,7 +9,7 @@ export const Skeleton = ({ className = '' }: { className?: string }) => (
 
 /** Wraps a page's bones: one announced "Loading" region, the bones themselves stay out of the accessibility tree. */
 export const SkeletonPage = ({ children, className = '' }: { children: ReactNode; className?: string }) => (
-  <div role="status" aria-busy aria-label="Loading" className={className}>{children}</div>
+  <div role="status" aria-busy aria-label={t('common.loading')} className={className}>{children}</div>
 )
 
 /** A settings/profile card while its data loads: heading bone plus `fields` label + input pairs. */

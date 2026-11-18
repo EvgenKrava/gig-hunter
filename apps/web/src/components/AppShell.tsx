@@ -4,16 +4,18 @@ import { Activity, Briefcase, Settings } from 'lucide-react'
 import { useAuthUser } from '../auth/useAuthUser'
 import { Skeleton } from './ui/Skeleton'
 import { UserMenu } from './UserMenu'
+import { useT } from '../i18n'
 
 const nav = [
-  { to: '/jobs', label: 'Jobs', Icon: Briefcase },
-  { to: '/activity', label: 'Activity', Icon: Activity },
-  { to: '/settings', label: 'Settings', Icon: Settings },
+  { to: '/jobs', label: 'nav.jobs', Icon: Briefcase },
+  { to: '/activity', label: 'nav.activity', Icon: Activity },
+  { to: '/settings', label: 'nav.settings', Icon: Settings },
 ] as const
 
 /** `user` is missing only while the session is still being read on a cold start; the shell then shows a blank avatar. */
 export function AppShell({ user, children }: { user?: { email: string }; children: ReactNode }) {
   const { signOut } = useAuthUser()
+  const { t } = useT()
   const account = user ? <UserMenu email={user.email} onSignOut={signOut} /> : <Skeleton className="h-11 w-11 rounded-full" />
   const linkClass = 'rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 [&.active]:bg-indigo-50 [&.active]:text-brand dark:text-slate-300 dark:hover:bg-slate-800'
   return (
@@ -22,7 +24,7 @@ export function AppShell({ user, children }: { user?: { email: string }; childre
       <header className="sticky top-0 z-40 hidden border-b border-slate-200 bg-white/90 backdrop-blur md:block dark:border-slate-800 dark:bg-slate-950/90">
         <div className="mx-auto flex max-w-3xl items-center gap-2 px-4 py-2">
           <Link to="/jobs" search={{ status: 'notified' }} className="mr-4 text-lg font-semibold text-brand">GigHunter</Link>
-          {nav.map(({ to, label }) => <Link key={to} to={to} className={linkClass}>{label}</Link>)}
+          {nav.map(({ to, label }) => <Link key={to} to={to} className={linkClass}>{t(label)}</Link>)}
           <div className="ml-auto">{account}</div>
         </div>
       </header>
@@ -33,10 +35,10 @@ export function AppShell({ user, children }: { user?: { email: string }; childre
       </header>
       <main className="mx-auto max-w-3xl px-4 pb-[calc(var(--bottom-nav)+1rem)] pt-4 md:pb-8">{children}</main>
       {/* Mobile bottom nav */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid h-(--bottom-nav) grid-cols-3 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden dark:border-slate-800 dark:bg-slate-950" aria-label="Primary">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid h-(--bottom-nav) grid-cols-3 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:hidden dark:border-slate-800 dark:bg-slate-950" aria-label={t('nav.primary')}>
         {nav.map(({ to, label, Icon }) => (
           <Link key={to} to={to} className="flex min-h-14 flex-col items-center justify-center gap-0.5 text-xs text-slate-500 [&.active]:text-brand">
-            <Icon size={22} />{label}
+            <Icon size={22} />{t(label)}
           </Link>
         ))}
       </nav>

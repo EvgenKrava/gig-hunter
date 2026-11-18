@@ -1,9 +1,11 @@
 import { useState, type KeyboardEvent } from 'react'
 import { X } from 'lucide-react'
 import { inputClass } from './Inputs'
+import { useT } from '../../i18n'
 
 export function TagInput({ value, onChange, placeholder, normalize = (s) => s.trim().toLowerCase() }: { value: string[]; onChange: (v: string[]) => void; placeholder?: string; normalize?: (s: string) => string }) {
   const [draft, setDraft] = useState('')
+  const { t } = useT()
   const add = (raw: string) => {
     const tag = normalize(raw)
     setDraft('')
@@ -16,10 +18,10 @@ export function TagInput({ value, onChange, placeholder, normalize = (s) => s.tr
   return (
     <div className={`${inputClass} flex min-h-11 flex-wrap items-center gap-2 py-1.5`}>
       <input className="order-last min-w-24 flex-1 bg-transparent py-1 text-base outline-none" value={draft} placeholder={placeholder} onChange={(e) => setDraft(e.target.value)} onKeyDown={onKey} onBlur={() => draft && add(draft)} enterKeyHint="done" />
-      {value.map((t) => (
-        <span key={t} className="inline-flex min-h-11 items-center gap-1 rounded-lg bg-slate-100 pl-2.5 pr-0.5 text-sm dark:bg-slate-800">
-          {t}
-          <button type="button" aria-label={`Remove ${t}`} className="grid h-11 w-9 place-items-center rounded-md hover:bg-slate-200 dark:hover:bg-slate-700" onClick={() => onChange(value.filter((v) => v !== t))}><X size={14} /></button>
+      {value.map((tag) => (
+        <span key={tag} className="inline-flex min-h-11 items-center gap-1 rounded-lg bg-slate-100 pl-2.5 pr-0.5 text-sm dark:bg-slate-800">
+          {tag}
+          <button type="button" aria-label={t('common.remove', { name: tag })} className="grid h-11 w-9 place-items-center rounded-md hover:bg-slate-200 dark:hover:bg-slate-700" onClick={() => onChange(value.filter((v) => v !== tag))}><X size={14} /></button>
         </span>
       ))}
     </div>
