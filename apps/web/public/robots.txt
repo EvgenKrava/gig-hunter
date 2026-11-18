@@ -1,4 +1,2 @@
 User-agent: *
-Disallow: /jobs
-Disallow: /profile
-Disallow: /settings
+Disallow: /
